@@ -1,0 +1,4 @@
+flet
+sqlalchemy
+pydantic_settings
+psycopg
