@@ -33,7 +33,8 @@ def check_user(username):
             return True
         else:
             return False
-        
+
+# Функция проверки, логина и пароля пользователя       
 def check_user_pass(username, userpass):
     
     with sync_engine.connect() as conn:
