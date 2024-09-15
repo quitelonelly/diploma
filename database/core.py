@@ -24,8 +24,20 @@ def insert_user(username, userpass):
     
 # Функция проверки, есть ли пользователь в БД
 def check_user(username):
+    
     with sync_engine.connect() as conn:
         stmt = select(users_table).where(users_table.c.username == username)
+        result = conn.execute(stmt).fetchone()
+        
+        if result:
+            return True
+        else:
+            return False
+        
+def check_user_pass(username, userpass):
+    
+    with sync_engine.connect() as conn:
+        stmt = select(users_table).where(users_table.c.username == username, users_table.c.userpass == userpass)
         result = conn.execute(stmt).fetchone()
         
         if result:
