@@ -6,12 +6,14 @@ def main(page):
     page.title = "Flet App"
     page.theme_mode = "dark"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
-    page.window_width = 350
+    page.window_width = 400
     page.window_height = 450
     page.window_resizable = False
     
+    # Вызов функции создания таблиц БД
     create_tables()
     
+    # Функция проверки заполнения полей
     def validate(e):
         if all([user_login.value, user_pass.value]):
             btn_registered.disabled = False
@@ -21,10 +23,12 @@ def main(page):
             btn_auth.disabled = True
         page.update()
     
+    # Функция закрытия диалогового окна
     def close_dialog(e):
         page.dialog.open = False
         page.update()
     
+    # Функция регистрации
     def register(e):
         result = insert_user(user_login.value, user_pass.value)
 
@@ -32,7 +36,7 @@ def main(page):
             dialog = ft.AlertDialog(
                 title=ft.Text("Успешно"),
                 content=ft.Text("Вы успешно зарегистрировались!"),
-                actions=[ft.TextButton("OK", on_click=close_dialog)]
+                actions=[ft.TextButton("ОК", on_click=close_dialog)]
             )
             page.dialog = dialog
             dialog.open = True
@@ -41,14 +45,15 @@ def main(page):
 
         if "существует" in result:
             dialog = ft.AlertDialog(
-                title=ft.Text("Ошибка регистрации"),
+                title=ft.Text("Ошибка"),
                 content=ft.Text(result),
-                actions=[ft.TextButton("OK", on_click=close_dialog)]
+                actions=[ft.TextButton("ОК", on_click=close_dialog)]
             )
             page.dialog = dialog
             dialog.open = True
             page.update()
-            
+    
+    # Функция авторизации       
     def auth(e):
         result = check_user_pass(user_login.value, user_pass.value)
         
@@ -56,7 +61,7 @@ def main(page):
             dialog = ft.AlertDialog(
                 title=ft.Text("Успешно"),
                 content=ft.Text("Вы успешно вошли в систему!"),
-                actions=[ft.TextButton("OK", on_click=close_dialog)]
+                actions=[ft.TextButton("ОК", on_click=close_dialog)]
             )
             page.dialog = dialog
             dialog.open = True
@@ -65,7 +70,7 @@ def main(page):
 
         if result == False:
             dialog = ft.AlertDialog(
-                title=ft.Text("Ошибка входа"),
+                title=ft.Text("Ошибка"),
                 content=ft.Text("Проверьте введенные данные!"),
                 actions=[ft.TextButton("OK", on_click=close_dialog)]
             )
@@ -84,28 +89,28 @@ def main(page):
         page.add(panel_auth)
 
     # Поля ввода логина и пароля
-    user_login = ft.TextField(label="Login", width=200, on_change=validate)
-    user_pass = ft.TextField(label="Password", width=200, on_change=validate, password=True)
+    user_login = ft.TextField(label="Логин", width=300, on_change=validate)
+    user_pass = ft.TextField(label="Пароль", width=300, on_change=validate, password=True)
 
     # Кнопка регистрации
-    btn_registered = ft.CupertinoFilledButton(text="Register", width=200, height=50, on_click=register, disabled=True)
+    btn_registered = ft.CupertinoFilledButton(text="Зарегистрироваться", width=300, height=50, on_click=register, disabled=True)
     # Кнопка авторизации
-    btn_auth = ft.CupertinoFilledButton(text="Entrance", width=200, height=50, on_click=auth, disabled=True)
+    btn_auth = ft.CupertinoFilledButton(text="Авторизоваться", width=300, height=50, on_click=auth, disabled=True)
 
     # Кнопка перехода между экранами авторизации и регистрации
-    already_registered_text = ft.Text("Already registered?")
-    sign_in_button = ft.TextButton("Sign In", on_click=lambda e: show_sign_in(), style=ft.ButtonStyle(color=ft.colors.BLUE))
+    already_registered_text = ft.Text("Уже зарегистрировались?")
+    sign_in_button = ft.TextButton("Войти", on_click=lambda e: show_sign_in(), style=ft.ButtonStyle(color=ft.colors.BLUE))
     
     # Кнопка перехода между экранами авторизации и регистрации
-    already_auth_text = ft.Text("Not registered yet?")
-    sign_up_button = ft.TextButton("Sign Up", on_click=lambda e: show_sign_up(), style=ft.ButtonStyle(color=ft.colors.BLUE))
+    already_auth_text = ft.Text("Еще не зарегистрировались?")
+    sign_up_button = ft.TextButton("Зарегистрироваться", on_click=lambda e: show_sign_up(), style=ft.ButtonStyle(color=ft.colors.BLUE))
 
     # Экран регистрации
     panel_register = ft.Row(
         [
             ft.Column(
                 [
-                    ft.Text("Registered"),
+                    ft.Text("Регистрация"),
                     user_login,
                     user_pass,
                     btn_registered,
@@ -117,7 +122,7 @@ def main(page):
                             ],
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
-                        padding=ft.padding.only(left=35),
+                        padding=ft.padding.only(left=65),
                     ),
                 ]
             )
@@ -130,7 +135,7 @@ def main(page):
         [
             ft.Column(
                 [
-                    ft.Text("Entrance"),
+                    ft.Text("Авторизация"),
                     user_login,
                     user_pass,
                     btn_auth,
@@ -142,7 +147,7 @@ def main(page):
                             ],
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
-                        padding=ft.padding.only(left=35),
+                        padding=ft.padding.only(left=55),
                     ),
                 ]
             )
