@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, text
 from database.config import settings
 
+# Создание движка
 sync_engine = create_engine(
     url = settings.DATABASE_URL_psycopg,
     echo = True,

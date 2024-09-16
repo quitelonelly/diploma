@@ -2,7 +2,7 @@ from sqlalchemy import Table, Column, Integer, String, MetaData, BigInteger
 
 metadata_obj = MetaData()
 
-# Таблица с клиентами
+# Таблица с пользователями
 users_table = Table(
     "users",
     metadata_obj,

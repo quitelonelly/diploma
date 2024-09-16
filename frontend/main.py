@@ -1,6 +1,7 @@
 import flet as ft
 
 from database.core import create_tables, insert_user, check_user_pass
+from frontend.screen_app import main_screen
 
 def main(page):
     page.title = "Flet App"
@@ -33,13 +34,13 @@ def main(page):
         result = insert_user(user_login.value, user_pass.value)
 
         if result is None:
-            dialog = ft.AlertDialog(
-                title=ft.Text("Успешно"),
-                content=ft.Text("Вы успешно зарегистрировались!"),
-                actions=[ft.TextButton("ОК", on_click=close_dialog)]
-            )
-            page.dialog = dialog
-            dialog.open = True
+            
+            page.window_width = 700
+            page.window_height = 850
+            page.window_resizable = False
+            
+            page.clean()
+            main_screen(page) 
             page.update()
             return
 
@@ -51,6 +52,10 @@ def main(page):
             )
             page.dialog = dialog
             dialog.open = True
+            
+            # Очистка полей после ошибки
+            user_login.value = ""
+            user_pass.value = ""
             page.update()
     
     # Функция авторизации       
@@ -58,13 +63,13 @@ def main(page):
         result = check_user_pass(user_login.value, user_pass.value)
         
         if result == True:
-            dialog = ft.AlertDialog(
-                title=ft.Text("Успешно"),
-                content=ft.Text("Вы успешно вошли в систему!"),
-                actions=[ft.TextButton("ОК", on_click=close_dialog)]
-            )
-            page.dialog = dialog
-            dialog.open = True
+        
+            page.window_width = 700
+            page.window_height = 850
+            page.window_resizable = False
+            
+            page.clean()
+            main_screen(page) 
             page.update()
             return
 
@@ -76,6 +81,10 @@ def main(page):
             )
             page.dialog = dialog
             dialog.open = True
+            
+            # Очистка полей после ошибки
+            user_login.value = ""
+            user_pass.value = ""
             page.update()
 
     # Функция показывает экран регистрации
