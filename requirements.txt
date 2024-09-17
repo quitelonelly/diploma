@@ -2,3 +2,5 @@ flet
 sqlalchemy
 pydantic_settings
 psycopg
+fastapi
+uvicorn

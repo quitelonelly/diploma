@@ -35,12 +35,12 @@ def main(page):
 
         if result is None:
             
-            page.window_width = 700
-            page.window_height = 850
+            page.window_width = 1300
+            page.window_height = 750
             page.window_resizable = False
             
             page.clean()
-            main_screen(page) 
+            main_screen(page, user_login.value) 
             page.update()
             return
 
@@ -63,13 +63,13 @@ def main(page):
         result = check_user_pass(user_login.value, user_pass.value)
         
         if result == True:
-        
-            page.window_width = 700
-            page.window_height = 850
+            
+            page.window_width = 1300
+            page.window_height = 750
             page.window_resizable = False
             
             page.clean()
-            main_screen(page) 
+            main_screen(page, user_login.value) 
             page.update()
             return
 
@@ -108,7 +108,7 @@ def main(page):
 
     # Кнопка перехода между экранами авторизации и регистрации
     already_registered_text = ft.Text("Уже зарегистрировались?")
-    sign_in_button = ft.TextButton("Войти", on_click=lambda e: show_sign_in(), style=ft.ButtonStyle(color=ft.colors.BLUE))
+    sign_in_button = ft.TextButton("Авторизоваться", on_click=lambda e: show_sign_in(), style=ft.ButtonStyle(color=ft.colors.BLUE))
     
     # Кнопка перехода между экранами авторизации и регистрации
     already_auth_text = ft.Text("Еще не зарегистрировались?")
