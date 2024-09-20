@@ -4,7 +4,7 @@ from database.core import create_tables, insert_user, check_user_pass
 from frontend.screen_app import main_screen
 
 def main(page):
-    page.title = "Flet App"
+    page.title = "TaskTracker"
     page.theme_mode = "dark"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.window_width = 400
@@ -40,7 +40,7 @@ def main(page):
             page.window_resizable = False
             
             page.clean()
-            main_screen(page, user_login.value) 
+            main_screen(page, user_login.value, user_pass.value) 
             page.update()
             return
 
@@ -69,7 +69,7 @@ def main(page):
             page.window_resizable = False
             
             page.clean()
-            main_screen(page, user_login.value) 
+            main_screen(page, user_login.value, user_pass.value) 
             page.update()
             return
 
