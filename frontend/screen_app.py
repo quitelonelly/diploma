@@ -4,12 +4,39 @@ import time
 
 def main_screen(page, login, password):
     
+     # Создаем кнопку навигации
+    menu_button = ft.PopupMenuButton(
+        items=[
+            ft.PopupMenuItem(
+                content=ft.Row([
+                    ft.Icon(ft.icons.TASK, color="#a0cafd"),  
+                    ft.Text("Мои задачи", color="#a0cafd")  
+                ]),
+                on_click=lambda _: my_task_app()
+            ),
+            ft.PopupMenuItem(
+                content=ft.Row([
+                    ft.Icon(ft.icons.ALL_OUT, color="#a0cafd"),  
+                    ft.Text("Все задачи", color="#a0cafd") 
+                ]),
+                on_click=lambda _: all_task_app()
+            ),
+            ft.PopupMenuItem(
+                content=ft.Row([
+                    ft.Icon(ft.icons.CHECK, color="#a0cafd"),  
+                    ft.Text("Выполнено", color="#a0cafd") 
+                ]),
+                on_click=lambda _: done_app()
+            ),
+        ],
+    )
+    
     # Создаем кнопку "Личный кабинет"
     account_button = ft.Row(
         [
-            ft.Icon(ft.icons.ACCOUNT_CIRCLE, color=ft.colors.WHITE),
-            ft.Text("Личный кабинет", color=ft.colors.WHITE, weight=ft.FontWeight.BOLD),
-            ft.Icon(ft.icons.ARROW_DROP_DOWN, color=ft.colors.WHITE),
+            ft.Icon(ft.icons.ACCOUNT_CIRCLE),
+            ft.Text("Личный кабинет", weight=ft.FontWeight.BOLD, color="#a0cafd"),
+            ft.Icon(ft.icons.ARROW_DROP_DOWN),
         ],
         alignment=ft.MainAxisAlignment.CENTER,
     )
@@ -107,6 +134,22 @@ def main_screen(page, login, password):
         page.dialog = profile_dialog
         profile_dialog.open = True
         page.update()
+    
+    # Функции замены контента в главном контейнере    
+    def my_task_app():
+        print("Мои задачи")
+        main_container.content = panel_my_tasks
+        page.update()
+        
+    def all_task_app():
+        print("Все задачи")
+        main_container.content = panel_all_tasks
+        page.update()
+        
+    def done_app():
+        print("Важное")
+        main_container.content = panel_done
+        page.update()
 
     edit_button.on_click = edit_profile
     exit_button.on_click = exit_profile
@@ -118,21 +161,121 @@ def main_screen(page, login, password):
         padding=ft.padding.only(right=20),
         on_click=show_profile_dialog,
     )
+    
+    all_task_list = ft.ListView(spacing=30, expand=True, padding=ft.padding.only(top=20))
+    
+    def confirm_name_task(name_task, e):
+        print(f"Имя " + name_task.value + " сохранено!")
+        # Тут будет логика добавления имени задачи в БД
+
+
+    def add_task(e):
+        print("Добавлена задача")
+        
+        name_task = ft.TextField(hint_text="Задача", text_size=22, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
+        
+        task_container = ft.Container(
+            content=ft.Column(
+                [
+                    ft.Row(
+                        [
+                            name_task,
+                            ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.WHITE, on_click=lambda e, name_task=name_task: confirm_name_task(name_task, e))
+                        ],
+                    ),
+                ],
+            ),
+            bgcolor=ft.colors.GREY,
+            border_radius=10,
+            padding=ft.padding.all(10)
+        )
+        all_task_list.controls.append(task_container)
+        page.update()
 
     # Шапка приложения с кнопками
     header_container = ft.Container(
         content=ft.Row(
             [
+                menu_button,
                 profile_button
             ],
-            alignment=ft.MainAxisAlignment.END,
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             expand=True,
         ),
     )
-
+    
+    # Контейнер с "Задачи"
+    panel_my_tasks = ft.Container(
+        content=ft.Column(  
+            [   
+                ft.Row(
+                    [
+                        ft.Text("Мои задачи", style="headlineMedium"),
+                    ],
+                    spacing=10,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.START,
+            spacing=10,
+            expand=True,
+        ),
+        padding=ft.padding.all(10),
+    )
+    
+    # Контейнер с "Все задачи"
+    panel_all_tasks = ft.Container(
+        content=ft.Column(  
+            [   
+                ft.Row(
+                    [
+                        ft.Text("Все задачи", style="headlineMedium"),
+                        ft.IconButton(ft.icons.ADD, icon_color=ft.colors.GREEN, tooltip="Добавить задачу", on_click=add_task)
+                    ],
+                    spacing=10,
+                ),
+                
+                ft.Container(
+                    content=all_task_list,
+                    expand=True
+                )
+            ],
+            alignment=ft.MainAxisAlignment.START,
+            spacing=10,
+            expand=True,
+        ),
+        padding=ft.padding.all(10),
+    )
+    
+    # Контейнер с "Важное"
+    panel_done = ft.Container(
+        content=ft.Column(  
+            [   
+                ft.Row(
+                    [
+                        ft.Text("Выполнено", style="headlineMedium"),
+                    ],
+                    spacing=10,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.START,
+            spacing=10,
+            expand=True,
+        ),
+        padding=ft.padding.all(10),
+    )
+    
+    # Основной контейнер с функционалом приложения
+    main_container = ft.Container(  
+         content=panel_my_tasks,  
+         expand=True,
+         padding=(15)
+     )
+    
+    # Контент экрана
     screen_app_content = ft.Column(
         [
             header_container,
+            main_container
         ],
         expand=True
     )
