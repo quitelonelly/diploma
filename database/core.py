@@ -1,9 +1,10 @@
-from database.models import metadata_obj, users_table
+from database.models import metadata_obj, users_table, tasks_table
 from database.db import sync_engine
 from sqlalchemy import insert, select, delete, func
 
 # Функция создания таблиц
 def create_tables():
+    metadata_obj.drop_all(sync_engine)
     metadata_obj.create_all(sync_engine)
     
 # Функция добавления пользователя в БД
@@ -45,3 +46,23 @@ def check_user_pass(username, userpass):
             return True
         else:
             return False
+        
+# Функция для записи задачи в БД
+def insert_task(title_task, user_id):
+    
+    with sync_engine.connect() as conn:
+        stmt = insert(tasks_table).values(
+            [
+                {"id_user": user_id, "taskname": title_task}
+            ]
+        )
+        conn.execute(stmt)
+        conn.commit()
+        
+# Функция ищет id пользователя по его логину
+def get_user_id_by_login(login):
+    with sync_engine.connect() as conn:
+        stmt = select(users_table).where(users_table.c.username == login)
+        result = conn.execute(stmt)
+        user = result.fetchone()
+        return user.id

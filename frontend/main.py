@@ -4,7 +4,7 @@ from database.core import create_tables, insert_user, check_user_pass
 from frontend.screen_app import main_screen
 
 def main(page):
-    page.title = "TaskTracker"
+    page.title = "Pulse"
     page.theme_mode = "dark"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.window_width = 400

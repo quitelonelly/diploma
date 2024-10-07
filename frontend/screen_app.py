@@ -1,30 +1,70 @@
 import threading
 import flet as ft
 import time
+from database.core import get_user_id_by_login, insert_task
 
 def main_screen(page, login, password):
     
-    my_task_button = ft.IconButton(
-    icon=ft.icons.ACCOUNT_BOX,
-    tooltip="Мои задачи",
-    on_click=lambda e: my_task_app()
+    input_task = ft.TextField(
+        label="Поиск",
+        hint_text="Поиск задачи",
+        text_size=14,
+        width=290,
+        color="#a0cafd",
+        max_lines=1,
+        prefix_icon=ft.icons.SEARCH,
+    )
+    
+    input_task = ft.TextField(
+        label="Поиск",
+        hint_text="Поиск задачи",
+        text_size=14,
+        width=290,
+        color="#a0cafd",
+        border_color="white",
+        max_lines=1,
+        prefix_icon=ft.icons.SEARCH,
+    )
+    
+    my_task_button = ft.TextButton(
+        content=ft.Row(
+            [
+                ft.Icon(ft.icons.ACCOUNT_BOX),
+                ft.Text("МОИ ЗАДАЧИ", size=14),
+            ],
+            alignment=ft.MainAxisAlignment.START,
+        ),
+        on_click=lambda e: my_task_app(),
+        width=150
     )
 
-    all_task_button = ft.IconButton(
-        icon=ft.icons.FOLDER,
-        tooltip="Все задачи",
-        on_click=lambda e: all_task_app()
+    all_task_button = ft.TextButton(
+        content=ft.Row(
+            [
+                ft.Icon(ft.icons.FOLDER),
+                ft.Text("ВСЕ ЗАДАЧИ", size=14),
+            ],
+            alignment=ft.MainAxisAlignment.START,
+        ),
+        on_click=lambda e: all_task_app(),
+        width=150
     )
 
-    completed_button = ft.IconButton(
-        icon=ft.icons.TASK_OUTLINED,
-        tooltip="Выполнено",
-        on_click=lambda e: done_app()
+    completed_button = ft.TextButton(
+        content=ft.Row(
+            [
+                ft.Icon(ft.icons.TASK_OUTLINED),
+                ft.Text("ВЫПОЛНЕНО", size=14),
+            ],
+            alignment=ft.MainAxisAlignment.START,
+        ),
+        on_click=lambda e: done_app(),
+        width=150
     )
     
      # Создаем кнопку навигации
     title_app = ft.Container(
-        content=ft.Text("TaskTracker", size=18, weight="bold", color="#f7f7f7", font_family="Montserrat"),
+        content=ft.Text("Pulse", size=18, weight="bold", color="#f7f7f7", font_family="Montserrat"),
         padding=ft.padding.only(left=20)
     )
     
@@ -161,18 +201,32 @@ def main_screen(page, login, password):
     
     all_task_list = ft.ListView(spacing=30, expand=True, padding=ft.padding.only(top=20))
     
-    def open_task(e):
-        print("Открыл задачу")
+    def open_task(e, task_container):
+        content_container = task_container.content.controls[2]
+        if not task_container.is_open:  # если контейнер не расширен
+            for i in range(0, 300, 10):  # цикл для изменения высоты контейнера
+                content_container.height = i
+                page.update()
+                time.sleep(0.007)  # задержка для создания анимации
+            task_container.is_open = True
+        else:  # если контейнер уже расширен
+            for i in range(300, 0, -10):  # цикл для изменения высоты контейнера
+                content_container.height = i
+                page.update()
+                time.sleep(0.007)  # задержка для создания анимации
+            task_container.is_open = False
     
     def confirm_name_task(title_task, e):
         print(f"Имя " + title_task.value + " сохранено!")
-        # Тут будет логика добавления имени задачи в БД
 
-
+        user_id = get_user_id_by_login(login)
+        insert_task(title_task.value, user_id)
+        
     def add_task(e):
         print("Добавлена задача")
         
         title_task = ft.TextField(hint_text="Задача", text_size=22, color="#a0cafd", read_only=False, border_width=0, width=None, max_lines=2, expand=True)
+        
         open_task_button = ft.TextButton(
             content=ft.Row(
                 [
@@ -181,7 +235,7 @@ def main_screen(page, login, password):
                 ],
                 width=135
             ),
-            on_click=open_task,
+            on_click=lambda e: open_task(e, task_container),
             expand=True,
         )
         
@@ -195,15 +249,27 @@ def main_screen(page, login, password):
                         ],
                     ),
                     open_task_button,
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                ft.Text("Тут будет список задач", color=ft.colors.BLACK)
+                            ],
+                            alignment=ft.MainAxisAlignment.START,
+                            spacing=10,
+                        ),
+                        padding=ft.padding.all(10),
+                        height=0,  # начальная высота контейнера
+                    ),
                 ],
             ),
             bgcolor="#f7f7f7",
             border_radius=10,
             padding=ft.padding.all(10)
         )
+        task_container.is_open = False  # добавляем атрибут is_open
         all_task_list.controls.append(task_container)
         page.update()
-
+        
     # Шапка приложения с кнопками
     header_container = ft.Container(
         content=ft.Row(
@@ -214,24 +280,25 @@ def main_screen(page, login, password):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             expand=True,
         ),
-        border=ft.Border(bottom=ft.BorderSide(1, "black"))
+        border=ft.Border(bottom=ft.BorderSide(1))
     )
     
     # Контейнер с навигацией
     navigation_container = ft.Container(
         content=ft.Column(
             [
+                input_task,
                 my_task_button,
                 all_task_button,
                 completed_button
             ],
             alignment=ft.MainAxisAlignment.START,
-            spacing=10,
+            spacing=20,
             expand=True,
         ),
         padding=ft.padding.only(left=10),
-        width=70,
-        border=ft.Border(right=ft.BorderSide(1, "black"))
+        width=320,
+        border=ft.Border(right=ft.BorderSide(1))
     )
     
     # Контейнер с "Задачи"
@@ -275,6 +342,7 @@ def main_screen(page, login, password):
         ),
         padding=ft.padding.all(10),
     )
+
     
     # Контейнер с "Важное"
     panel_done = ft.Container(
@@ -298,6 +366,7 @@ def main_screen(page, login, password):
     main_container = ft.Container(  
          content=panel_my_tasks,  
          expand=True,
+         padding=ft.padding.all(20)
      )
     
     # Контент экрана
