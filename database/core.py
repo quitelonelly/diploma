@@ -1,6 +1,6 @@
 from database.models import metadata_obj, users_table, tasks_table
 from database.db import sync_engine
-from sqlalchemy import insert, select, delete, func
+from sqlalchemy import insert, select, update
 
 # Функция создания таблиц
 def create_tables():
@@ -49,13 +49,18 @@ def check_user_pass(username, userpass):
         
 # Функция для записи задачи в БД
 def insert_task(title_task, user_id):
-    
     with sync_engine.connect() as conn:
         stmt = insert(tasks_table).values(
-            [
-                {"id_user": user_id, "taskname": title_task}
-            ]
-        )
+            {"id_user": user_id, "taskname": title_task}
+        ).returning(tasks_table.c.id)
+        result = conn.execute(stmt)
+        task_id = result.scalar()
+        conn.commit()
+        return task_id
+    
+def update_task(task_id, new_title):
+    with sync_engine.connect() as conn:
+        stmt = update(tasks_table).where(tasks_table.c.id == task_id).values(taskname=new_title)
         conn.execute(stmt)
         conn.commit()
         

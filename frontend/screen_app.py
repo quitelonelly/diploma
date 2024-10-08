@@ -1,7 +1,7 @@
 import threading
 import flet as ft
 import time
-from database.core import get_user_id_by_login, insert_task
+from database.core import get_user_id_by_login, insert_task, update_task
 
 def main_screen(page, login, password):
     
@@ -216,16 +216,18 @@ def main_screen(page, login, password):
                 time.sleep(0.007)  # задержка для создания анимации
             task_container.is_open = False
     
-    def confirm_name_task(title_task, e):
+    def confirm_name_task(title_task, task_id, e):
+        update_task(task_id, title_task.value)
+        
         print(f"Имя " + title_task.value + " сохранено!")
-
-        user_id = get_user_id_by_login(login)
-        insert_task(title_task.value, user_id)
         
     def add_task(e):
         print("Добавлена задача")
         
         title_task = ft.TextField(hint_text="Задача", text_size=22, color="#a0cafd", read_only=False, border_width=0, width=None, max_lines=2, expand=True)
+        
+        user_id = get_user_id_by_login(login)
+        task_id = insert_task("Новая задача", user_id)
         
         open_task_button = ft.TextButton(
             content=ft.Row(
@@ -245,7 +247,7 @@ def main_screen(page, login, password):
                     ft.Row(
                         [
                             title_task,
-                            ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.GREEN, tooltip="Сохранить заголовок", on_click=lambda e, title_task=title_task: confirm_name_task(title_task, e))
+                            ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.GREEN, tooltip="Сохранить заголовок", on_click=lambda e, title_task=title_task, task_id=task_id: confirm_name_task(title_task, task_id, e))
                         ],
                     ),
                     open_task_button,
