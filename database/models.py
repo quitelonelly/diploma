@@ -11,12 +11,11 @@ users_table = Table(
     Column("userpass", String),
 )
 
-# Таблица с задачами
+# Таблица со ВСЕМИ задачами
 tasks_table = Table(
     "tasks",
     metadata_obj,
     Column("id", BigInteger, primary_key=True),
-    Column("id_user", BigInteger, ForeignKey("users.id")),
     Column("taskname", String),
 )
 
@@ -26,14 +25,7 @@ subtasks_table = Table(
     metadata_obj,
     Column("id", BigInteger, primary_key=True),
     Column("id_task", BigInteger, ForeignKey("tasks.id")),
+    Column("id_user", BigInteger, ForeignKey("users.id")),
     Column("subtaskname", String),
 )
 
-# Таблица с назначенными исполнителями
-task_executors_table = Table(
-    "task_executors",
-    metadata_obj,
-    Column("id", BigInteger, primary_key=True),
-    Column("id_task", BigInteger, ForeignKey("tasks.id")),
-    Column("id_executor", BigInteger, ForeignKey("users.id")),
-)

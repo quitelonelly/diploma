@@ -2,5 +2,6 @@ flet
 sqlalchemy
 pydantic_settings
 psycopg
+asyncpg
 fastapi
 uvicorn

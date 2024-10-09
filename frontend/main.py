@@ -2,6 +2,11 @@ import flet as ft
 
 from database.core import create_tables, insert_user, check_user_pass
 from frontend.screen_app import main_screen
+from frontend.layout import (
+    create_input_login, create_input_pass, create_btn_reg, 
+    create_btn_auth, create_sign_in_btn, create_sign_up_button, 
+    create_reg_panel, create_auth_panel
+                             )
 
 def main(page):
     page.title = "Pulse"
@@ -83,8 +88,8 @@ def main(page):
             dialog.open = True
             
             # Очистка полей после ошибки
-            user_login.value = ""
-            user_pass.value = ""
+            create_input_login(validate).value = ""
+            create_input_pass(validate).value = ""
             page.update()
 
     # Функция показывает экран регистрации
@@ -98,71 +103,27 @@ def main(page):
         page.add(panel_auth)
 
     # Поля ввода логина и пароля
-    user_login = ft.TextField(label="Логин", width=300, on_change=validate)
-    user_pass = ft.TextField(label="Пароль", width=300, on_change=validate, password=True)
+    user_login = create_input_login(validate)
+    user_pass = create_input_pass(validate)
 
     # Кнопка регистрации
-    btn_registered = ft.CupertinoFilledButton(text="Зарегистрироваться", width=300, height=50, on_click=register, disabled=True)
+    btn_registered = create_btn_reg(register)
     # Кнопка авторизации
-    btn_auth = ft.CupertinoFilledButton(text="Авторизоваться", width=300, height=50, on_click=auth, disabled=True)
+    btn_auth = create_btn_auth(auth)
 
     # Кнопка перехода между экранами авторизации и регистрации
     already_registered_text = ft.Text("Уже зарегистрировались?")
-    sign_in_button = ft.TextButton("Авторизоваться", on_click=lambda e: show_sign_in(), style=ft.ButtonStyle(color=ft.colors.BLUE))
+    sign_in_button = create_sign_in_btn(show_sign_in)
     
     # Кнопка перехода между экранами авторизации и регистрации
     already_auth_text = ft.Text("Еще не зарегистрировались?")
-    sign_up_button = ft.TextButton("Зарегистрироваться", on_click=lambda e: show_sign_up(), style=ft.ButtonStyle(color=ft.colors.BLUE))
+    sign_up_button = create_sign_up_button(show_sign_up)
 
     # Экран регистрации
-    panel_register = ft.Row(
-        [
-            ft.Column(
-                [
-                    ft.Text("Регистрация"),
-                    user_login,
-                    user_pass,
-                    btn_registered,
-                    ft.Container(
-                        content=ft.Column(
-                            [
-                                already_registered_text,
-                                sign_in_button,
-                            ],
-                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        ),
-                        padding=ft.padding.only(left=65),
-                    ),
-                ]
-            )
-        ],
-        alignment=ft.MainAxisAlignment.CENTER,
-    )
+    panel_register = create_reg_panel(user_login, user_pass, btn_registered, already_registered_text, sign_in_button)
     
     # Экран авторизации
-    panel_auth = ft.Row(
-        [
-            ft.Column(
-                [
-                    ft.Text("Авторизация"),
-                    user_login,
-                    user_pass,
-                    btn_auth,
-                    ft.Container(
-                        content=ft.Column(
-                            [
-                                already_auth_text,
-                                sign_up_button,
-                            ],
-                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        ),
-                        padding=ft.padding.only(left=55),
-                    ),
-                ]
-            )
-        ],
-        alignment=ft.MainAxisAlignment.CENTER,
-    )
+    panel_auth = create_auth_panel(user_login, user_pass, btn_auth, already_auth_text, sign_up_button)
 
     # Показ экрана регистрации
     page.add(panel_register)
