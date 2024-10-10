@@ -9,6 +9,7 @@ users_table = Table(
     Column("id", BigInteger, primary_key=True),
     Column("username", String),
     Column("userpass", String),
+    Column("permissions", String)
 )
 
 # Таблица со ВСЕМИ задачами

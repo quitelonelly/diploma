@@ -1,6 +1,18 @@
 from database.models import metadata_obj, users_table, tasks_table
 from database.db import sync_engine
 from sqlalchemy import insert, select, update
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+class Model(DeclarativeBase):
+    pass
+
+class UserORM(Model):
+    __tablename__ = "users"
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str]
+    userpass: Mapped[str]
+    permissions: Mapped[str | None]
 
 # Функция создания таблиц
 def create_tables():
@@ -64,6 +76,13 @@ def update_task(task_id, new_title):
         conn.execute(stmt)
         conn.commit()
         
+# Функция получения всех пользователей из БД
+def get_users():
+    with sync_engine.connect() as conn:
+        stmt = select(users_table)
+        result = conn.execute(stmt)
+        return result.fetchall()        
+
 # Функция получения всех задач из БД
 def get_tasks():
     with sync_engine.connect() as conn:

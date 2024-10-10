@@ -1,15 +1,27 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 
-from contextlib import asynccontextmanager
+from backend.repository import UserRepository
+from backend.shemas import User
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    
-    print("Запуск...")
 
 app = FastAPI(
-    lifespan=lifespan
+    title="Pulse"
 )
 
+# Получение всех пользователей приложения
+@app.get("/users")
+async def get_users() -> list[User]:
+    users = await UserRepository.get_users()
+    return users
+    
 
+# Получение всех задач
+@app.get("/tasks")
+async def get_tasks():
+    ...
+    
+# Получение задач по пользователю
+@app.get("/tasks/{user_id}")
+async def get_tasks(user_id: int):
+    ...
