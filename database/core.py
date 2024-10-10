@@ -14,6 +14,12 @@ class UserORM(Model):
     userpass: Mapped[str]
     permissions: Mapped[str | None]
 
+class TaskORM(Model):
+    __tablename__ = "tasks"
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    taskname: Mapped[str]
+    
 # Функция создания таблиц
 def create_tables():
     metadata_obj.create_all(sync_engine)

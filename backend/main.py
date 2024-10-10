@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from backend.repository import UserRepository
-from backend.shemas import User
+from backend.repository import TaskRepository, UserRepository
+from backend.shemas import Task, User
 
 
 app = FastAPI(
@@ -18,8 +18,9 @@ async def get_users() -> list[User]:
 
 # Получение всех задач
 @app.get("/tasks")
-async def get_tasks():
-    ...
+async def get_tasks() -> list[Task]:
+    tasks = await TaskRepository.get_tasks()
+    return tasks
     
 # Получение задач по пользователю
 @app.get("/tasks/{user_id}")

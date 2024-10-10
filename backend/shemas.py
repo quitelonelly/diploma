@@ -7,6 +7,10 @@ class UserAdd(BaseModel):
 
 class User(UserAdd):
     id: int
+
+        
+class TaskAdd(BaseModel):
+    taskname: str
     
-    class Config:
-        orm_mode = True
+class Task(TaskAdd):
+    id: int

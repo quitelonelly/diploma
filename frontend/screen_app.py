@@ -33,12 +33,15 @@ def main_screen(page, login, password):
             
     all_task_list = ft.ListView(spacing=30, expand=True, padding=ft.padding.only(top=20))
     
+    def add_people(e):
+        print("Добавлен исполнитель!")
+    
     # Функция загружает задачи
     def load_tasks():
         tasks = get_tasks()
         
         for task in tasks:
-            task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task)
+            task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people)
             all_task_list.controls.append(task_container)
             page.update()
             
@@ -73,7 +76,7 @@ def main_screen(page, login, password):
         
         title_task = "Новая задача"
         task_id = insert_task(title_task)
-        task_container = create_task_container(task_id, title_task, confirm_name_task, open_task)
+        task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, add_people)
         all_task_list.controls.append(task_container)
         page.update()
     

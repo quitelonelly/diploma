@@ -204,9 +204,23 @@ def create_profile_dialog(close_icon, login_tile_container, password_tile_contai
         )
     return profile_dialog
 
-def create_task_container(task_id, task_name, confirm_name_task, open_task):
+def create_task_container(task_id, task_name, confirm_name_task, open_task, add_people):
     title_task = ft.TextField(value=task_name, text_size=22, color="#a0cafd", read_only=False, border_width=0, width=None, max_lines=2, expand=True)
-        
+    
+    btn_add_people = ft.TextButton(
+        content=ft.Row(
+            [
+                ft.Text("Добавить исполнителя"),
+                ft.Icon(ft.icons.ADD)
+            ],
+            width=180,
+            expand=True,
+            alignment=ft.MainAxisAlignment.START
+        ),
+        on_click=lambda e: add_people(e)
+    )
+       
+    
     task_container = ft.Container(
         content=ft.Column(
             [
@@ -230,7 +244,8 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task):
                 ft.Container(
                     content=ft.Column(
                         [
-                            ft.Text("Тут будет список задач", color=ft.colors.BLACK)
+                            ft.Text("Тут будет список задач", color=ft.colors.BLACK),
+                            btn_add_people
                         ],
                         alignment=ft.MainAxisAlignment.START,
                         spacing=10,
