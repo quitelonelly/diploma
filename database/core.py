@@ -1,6 +1,6 @@
-from database.models import metadata_obj, users_table, tasks_table
+from database.models import metadata_obj, users_table, tasks_table, responsible_table
 from database.db import sync_engine
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, select, update, delete
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 class Model(DeclarativeBase):
@@ -103,3 +103,37 @@ def get_user_id_by_login(login):
         result = conn.execute(stmt)
         user = result.fetchone()
         return user.id
+
+# Функция добавляет ответсвенный к задачам    
+def insert_person(id_task, id_user):
+    with sync_engine.connect() as conn:
+        stmt = insert(responsible_table).values(
+            {
+                "id_task": id_task, "id_user": id_user
+            }
+        )
+        
+        conn.execute(stmt)
+        conn.commit()
+        
+# Функция ищет пользователя, который уже связан с задачей
+def get_associated_users(task_id):
+    with sync_engine.connect() as conn:
+        stmt = select(responsible_table.c.id_user).where(responsible_table.c.id_task == task_id)
+        result = conn.execute(stmt)
+        return [row[0] for row in result]
+
+# Функция удаляет пользователя с задачи
+def remove_user_from_task(task_id, user_id):
+    with sync_engine.connect() as conn:
+        stmt = delete(responsible_table).where(responsible_table.c.id_task == task_id, responsible_table.c.id_user == user_id)
+        conn.execute(stmt)
+        conn.commit()
+        
+def get_responsible_users_by_task_id(task_id):
+    with sync_engine.connect() as conn:
+        stmt = select(responsible_table.c.id_user).where(responsible_table.c.id_task == task_id)
+        result = conn.execute(stmt)
+        return [row[0] for row in result]
+        
+        

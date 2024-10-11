@@ -1,10 +1,14 @@
 import flet as ft
 import time
-from database.core import insert_task, update_task, get_tasks
+from database.core import (
+    insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
+    get_user_id_by_login, get_responsible_users_by_task_id
+    )
 from frontend.layout import (
     create_input_task, create_my_task_btn, create_all_task_btn, create_completed_btn, create_account_btn,
     create_edit_btn, create_exit_btn, create_profile_dialog, create_task_container, create_header_container,
-    create_nav_container, create_panel_my_task, create_panel_all_tasks, create_panel_done, create_screen_app
+    create_nav_container, create_panel_my_task, create_panel_all_tasks, create_panel_done, create_screen_app,
+    create_add_person_dialog
 )
 
 def main_screen(page, login, password):
@@ -32,9 +36,10 @@ def main_screen(page, login, password):
             task_container.is_open = False
             
     all_task_list = ft.ListView(spacing=30, expand=True, padding=ft.padding.only(top=20))
+    my_task_list = ft.ListView(spacing=30, expand=True, padding=ft.padding.only(top=20))
     
-    def add_people(e):
-        print("Добавлен исполнитель!")
+    def add_people(task_id, e):
+        show_add_person_dialog(task_id, e)
     
     # Функция загружает задачи
     def load_tasks():
@@ -44,8 +49,21 @@ def main_screen(page, login, password):
             task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people)
             all_task_list.controls.append(task_container)
             page.update()
+    
+    def load_my_tasks():
+        my_task_list.controls.clear()
+        user_id = get_user_id_by_login(login)
+        tasks = get_tasks()
+        
+        for task in tasks:
+            responsible_users = get_responsible_users_by_task_id(task.id)
+            if user_id in responsible_users:
+                task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people)
+                my_task_list.controls.append(task_container)
+        page.update()
             
     load_tasks()
+    load_my_tasks()
             
     # Функции замены контента в главном контейнере    
     def my_task_app():
@@ -59,7 +77,7 @@ def main_screen(page, login, password):
         page.update()
         
     def done_app():
-        print("Важное")
+        print("Выполнено")
         main_container.content = panel_done
         page.update()
         
@@ -139,6 +157,22 @@ def main_screen(page, login, password):
         page.dialog = profile_dialog
         profile_dialog.open = True
         page.update()
+        
+    def show_add_person_dialog(task_id, e):
+        def close_dialog(dialog):
+            dialog.open = False
+            page.update()
+
+        close_icon = ft.IconButton(
+            icon=ft.icons.CLOSE,
+            icon_color=ft.colors.WHITE,
+            on_click=lambda _: close_dialog(add_person_dialog)
+        )
+
+        add_person_dialog = create_add_person_dialog(get_users, close_icon, page, insert_person, task_id, get_associated_users, remove_user_from_task)
+        page.dialog = add_person_dialog
+        add_person_dialog.open = True
+        page.update()
 
     edit_button.on_click = edit_profile
     exit_button.on_click = exit_profile
@@ -157,14 +191,14 @@ def main_screen(page, login, password):
     # Контейнер с навигацией
     navigation_container = create_nav_container(input_task, my_task_button, all_task_button, completed_button)
     
-    # Контейнер с "Задачи"
-    panel_my_tasks = create_panel_my_task()
+    # Контейнер с "Мои задачи"
+    panel_my_tasks = create_panel_my_task(my_task_list)
     
     # Контейнер с "Все задачи"
     panel_all_tasks = create_panel_all_tasks(add_task, all_task_list)
 
     
-    # Контейнер с "Важное"
+    # Контейнер с "Выполнено"
     panel_done = create_panel_done()
     
     # Основной контейнер с функционалом приложения

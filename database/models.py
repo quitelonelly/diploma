@@ -20,13 +20,15 @@ tasks_table = Table(
     Column("taskname", String),
 )
 
-# Таблица с подзадачами
-subtasks_table = Table(
-    "subtasks",
+# Таблица с исполнителями задач
+responsible_table = Table(
+    "responsible",
     metadata_obj,
     Column("id", BigInteger, primary_key=True),
     Column("id_task", BigInteger, ForeignKey("tasks.id")),
     Column("id_user", BigInteger, ForeignKey("users.id")),
-    Column("subtaskname", String),
 )
+
+# Таблица с подзадачами
+
 

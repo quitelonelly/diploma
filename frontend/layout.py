@@ -204,20 +204,80 @@ def create_profile_dialog(close_icon, login_tile_container, password_tile_contai
         )
     return profile_dialog
 
+def create_add_person_dialog(get_users, close_icon, page, insert_person, task_id, get_associated_users, remove_user_from_task):
+    users = get_users()
+    user_list = ft.ListView(spacing=15, padding=ft.padding.all(10), expand=True)
+    
+    # Get the users associated with the task
+    associated_users = get_associated_users(task_id)
+    
+    for user in users:
+        icon_button = ft.IconButton(icon=ft.icons.ADD, icon_color=ft.colors.GREEN, tooltip="Добавить")
+        icon_button.clicked = False  # Initialize a flag to track the icon state
+        
+        # Check if the user is already associated with the task
+        if user[0] in associated_users:
+            icon_button.icon = ft.icons.CHECK_CIRCLE
+            icon_button.tooltip = "Удалить"
+            icon_button.clicked = True
+        
+        def create_toggle_icon(icon_button, user):
+            def toggle_icon(e):
+                if icon_button.clicked:
+                    icon_button.icon = ft.icons.ADD
+                    icon_button.tooltip = "Добавить"
+                    print(f"Удален пользователь {user[1]}")
+                    # Remove the user from the task
+                    remove_user_from_task(task_id, user[0])
+                else:
+                    icon_button.icon = ft.icons.CHECK_CIRCLE
+                    icon_button.tooltip = "Удалить"
+                    print(f"Добавлен пользователь {user[1]}")
+                    # Add the user to the task
+                    insert_person(task_id, user[0])
+                icon_button.clicked = not icon_button.clicked  # Toggle the flag
+                page.update()  # Update the page to reflect the changes
+            return toggle_icon
+
+        icon_button.on_click = create_toggle_icon(icon_button, user)
+
+        user_list.controls.append(ft.ListTile(
+            leading=icon_button,
+            title=ft.Text(user[1], size=25)
+        ))
+
+    add_person_dialog = ft.AlertDialog(
+        modal=False,
+        content=ft.Container(
+            content=ft.Column(
+                [
+                    ft.Row(
+                        [close_icon],
+                        alignment=ft.MainAxisAlignment.END
+                    ),
+                    user_list
+                ]
+            ),
+            width=400,
+            height=400,
+        )
+    )
+    return add_person_dialog
+
 def create_task_container(task_id, task_name, confirm_name_task, open_task, add_people):
     title_task = ft.TextField(value=task_name, text_size=22, color="#a0cafd", read_only=False, border_width=0, width=None, max_lines=2, expand=True)
     
-    btn_add_people = ft.TextButton(
+    btn_add_people = ft.FilledButton(
         content=ft.Row(
             [
-                ft.Text("Добавить исполнителя"),
-                ft.Icon(ft.icons.ADD)
+                ft.Text("Добавить исполнителя", color=ft.colors.WHITE),
+                ft.Icon(ft.icons.ADD, color=ft.colors.WHITE)
             ],
             width=180,
             expand=True,
             alignment=ft.MainAxisAlignment.START
         ),
-        on_click=lambda e: add_people(e)
+        on_click=lambda e: add_people(task_id, e)
     )
        
     
@@ -295,7 +355,7 @@ def create_nav_container(input_task, my_task_button, all_task_button, completed_
     )
     return navigation_container
 
-def create_panel_my_task():
+def create_panel_my_task(my_task_list):
     panel_my_tasks = ft.Container(
         content=ft.Column(  
             [   
@@ -305,6 +365,11 @@ def create_panel_my_task():
                     ],
                     spacing=10,
                 ),
+                
+                ft.Container(
+                    content=my_task_list,
+                    expand=True
+                )
             ],
             alignment=ft.MainAxisAlignment.START,
             spacing=10,
