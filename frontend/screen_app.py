@@ -1,14 +1,18 @@
 import flet as ft
 import time
+
+from threading import Timer
+
 from database.core import (
     insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
     get_user_id_by_login, get_responsible_users_by_task_id
     )
+
 from frontend.layout import (
     create_input_task, create_my_task_btn, create_all_task_btn, create_completed_btn, create_account_btn,
     create_edit_btn, create_exit_btn, create_profile_dialog, create_task_container, create_header_container,
     create_nav_container, create_panel_my_task, create_panel_all_tasks, create_panel_done, create_screen_app,
-    create_add_person_dialog
+    create_add_person_dialog, create_my_task_container
 )
 
 def main_screen(page, login, password):
@@ -40,15 +44,20 @@ def main_screen(page, login, password):
     
     def add_people(task_id, e):
         show_add_person_dialog(task_id, e)
+        
+    def repeater(interval, function):
+        Timer(interval, repeater, [interval, function]).start()
+        function()
     
     # Функция загружает задачи
     def load_tasks():
         tasks = get_tasks()
         
         for task in tasks:
-            task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people)
-            all_task_list.controls.append(task_container)
-            page.update()
+            if not any(container.task_id == task.id for container in all_task_list.controls):
+                task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people)
+                all_task_list.controls.append(task_container)
+        page.update()
     
     def load_my_tasks():
         my_task_list.controls.clear()
@@ -57,13 +66,13 @@ def main_screen(page, login, password):
         
         for task in tasks:
             responsible_users = get_responsible_users_by_task_id(task.id)
-            if user_id in responsible_users:
-                task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people)
+            if user_id in responsible_users and not any(container.task_id == task.id for container in my_task_list.controls):
+                task_container = create_my_task_container(task.id, task.taskname, confirm_name_task, open_task)
                 my_task_list.controls.append(task_container)
         page.update()
-            
-    load_tasks()
+    
     load_my_tasks()
+    repeater(300, load_tasks)
             
     # Функции замены контента в главном контейнере    
     def my_task_app():
@@ -192,7 +201,7 @@ def main_screen(page, login, password):
     navigation_container = create_nav_container(input_task, my_task_button, all_task_button, completed_button)
     
     # Контейнер с "Мои задачи"
-    panel_my_tasks = create_panel_my_task(my_task_list)
+    panel_my_tasks = create_panel_my_task(my_task_list, load_my_tasks)
     
     # Контейнер с "Все задачи"
     panel_all_tasks = create_panel_all_tasks(add_task, all_task_list)

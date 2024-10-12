@@ -264,6 +264,50 @@ def create_add_person_dialog(get_users, close_icon, page, insert_person, task_id
     )
     return add_person_dialog
 
+def create_my_task_container(task_id, task_name, confirm_name_task, open_task):
+    title_task = ft.TextField(value=task_name, text_size=22, color="#a0cafd", read_only=False, border_width=0, width=None, max_lines=2, expand=True)
+    
+    task_container = ft.Container(
+        content=ft.Column(
+            [
+                ft.Row(
+                    [
+                        title_task,
+                        ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.GREEN, tooltip="Сохранить заголовок", on_click=lambda e, title_task=title_task, task_id=task_id: confirm_name_task(title_task, task_id, e))
+                    ],
+                ),
+                ft.TextButton(
+                    content=ft.Row(
+                        [
+                            ft.Text("Посмотреть все"),
+                            ft.Icon(ft.icons.ARROW_DROP_DOWN)
+                        ],
+                        width=135
+                    ),
+                    on_click=lambda e: open_task(e, task_container),
+                    expand=True,
+                ),
+                ft.Container(
+                    content=ft.Column(
+                        [
+                            ft.Text("Тут будет список задач", color=ft.colors.BLACK),
+                        ],
+                        alignment=ft.MainAxisAlignment.START,
+                        spacing=10,
+                    ),
+                    padding=ft.padding.all(10),
+                    height=0,  # начальная высота контейнера
+                ),
+            ],
+        ),
+        bgcolor="#f7f7f7",
+        border_radius=10,
+        padding=ft.padding.all(10)
+    )
+    task_container.task_id = task_id
+    task_container.is_open = False  # добавляем атрибут is_open
+    return task_container
+
 def create_task_container(task_id, task_name, confirm_name_task, open_task, add_people):
     title_task = ft.TextField(value=task_name, text_size=22, color="#a0cafd", read_only=False, border_width=0, width=None, max_lines=2, expand=True)
     
@@ -319,6 +363,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
         border_radius=10,
         padding=ft.padding.all(10)
     )
+    task_container.task_id = task_id
     task_container.is_open = False  # добавляем атрибут is_open
     return task_container
 
@@ -355,13 +400,21 @@ def create_nav_container(input_task, my_task_button, all_task_button, completed_
     )
     return navigation_container
 
-def create_panel_my_task(my_task_list):
+def create_panel_my_task(my_task_list, load_my_tasks):
+    
+    btn_update = ft.IconButton(
+        icon=ft.icons.UPDATE,
+        tooltip="Обновить",
+        on_click=lambda e: load_my_tasks()
+    )
+    
     panel_my_tasks = ft.Container(
         content=ft.Column(  
             [   
                 ft.Row(
                     [
                         ft.Text("Мои задачи", style="headlineMedium"),
+                        btn_update
                     ],
                     spacing=10,
                 ),
