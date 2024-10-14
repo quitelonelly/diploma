@@ -129,8 +129,9 @@ def remove_user_from_task(task_id, user_id):
         stmt = delete(responsible_table).where(responsible_table.c.id_task == task_id, responsible_table.c.id_user == user_id)
         conn.execute(stmt)
         conn.commit()
-        
-def get_responsible_users_by_task_id(task_id):
+    
+# Функция ищет исполнителей у задачи
+def get_responsible_users(task_id):
     with sync_engine.connect() as conn:
         stmt = select(responsible_table.c.id_user).where(responsible_table.c.id_task == task_id)
         result = conn.execute(stmt)

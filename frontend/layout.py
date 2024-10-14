@@ -86,6 +86,7 @@ def create_input_task():
         label="Поиск",
         hint_text="Поиск задачи",
         text_size=14,
+        border_color=ft.colors.WHITE,
         width=290,
         color="#a0cafd",
         max_lines=1,
@@ -204,6 +205,38 @@ def create_profile_dialog(close_icon, login_tile_container, password_tile_contai
         )
     return profile_dialog
 
+def create_responsible_person_dialog(get_responsible_users, task_id, get_users, close_icon):
+    # Получаем логины пользователей, связанных с задачей
+    responsible_users = get_responsible_users(task_id)
+    users = [user.username for user in get_users() if user.id in responsible_users]
+    
+    # Создаем список логинов
+    users_list = ft.ListView(spacing=15, padding=ft.padding.all(10), expand=True)
+    for user in users:
+        users_list.controls.append(ft.ListTile(
+            leading=ft.Icon(ft.icons.PERSON),
+            title=ft.Text(user, size=25)
+        ))
+    
+    responsible_users_dialog = ft.AlertDialog(
+        modal=False,
+        content=ft.Container(
+            content=ft.Column(
+                [
+                    ft.Row(
+                        [close_icon],
+                        alignment=ft.MainAxisAlignment.END
+                    ),
+                    users_list
+                ],
+            ),
+            width=400,
+            height=400,
+        )
+    )
+    
+    return responsible_users_dialog
+
 def create_add_person_dialog(get_users, close_icon, page, insert_person, task_id, get_associated_users, remove_user_from_task):
     users = get_users()
     user_list = ft.ListView(spacing=15, padding=ft.padding.all(10), expand=True)
@@ -264,8 +297,8 @@ def create_add_person_dialog(get_users, close_icon, page, insert_person, task_id
     )
     return add_person_dialog
 
-def create_my_task_container(task_id, task_name, confirm_name_task, open_task):
-    title_task = ft.TextField(value=task_name, text_size=22, color="#a0cafd", read_only=False, border_width=0, width=None, max_lines=2, expand=True)
+def create_my_task_container(task_id, task_name, confirm_name_task, open_task, show_responsible_users_dialog):
+    title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
     
     task_container = ft.Container(
         content=ft.Column(
@@ -276,16 +309,27 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task):
                         ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.GREEN, tooltip="Сохранить заголовок", on_click=lambda e, title_task=title_task, task_id=task_id: confirm_name_task(title_task, task_id, e))
                     ],
                 ),
-                ft.TextButton(
-                    content=ft.Row(
-                        [
-                            ft.Text("Посмотреть все"),
-                            ft.Icon(ft.icons.ARROW_DROP_DOWN)
-                        ],
-                        width=135
-                    ),
-                    on_click=lambda e: open_task(e, task_container),
-                    expand=True,
+                ft.Row(  # Добавляем Row для двух кнопок
+                    [
+                        ft.TextButton(
+                            content=ft.Row(
+                                [
+                                    ft.Text("Посмотреть все"),
+                                    ft.Icon(ft.icons.ARROW_DROP_DOWN)
+                                ],
+                            ),
+                            on_click=lambda e: open_task(e, task_container),
+                        ),
+                        ft.TextButton(
+                            content=ft.Row(
+                                [
+                                    ft.Text("Посмотреть исполнителей"),
+                                    ft.Icon(ft.icons.PEOPLE)
+                                ],
+                            ),
+                            on_click=lambda e: show_responsible_users_dialog(task_id, e),
+                        )
+                    ],
                 ),
                 ft.Container(
                     content=ft.Column(
@@ -309,21 +353,17 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task):
     return task_container
 
 def create_task_container(task_id, task_name, confirm_name_task, open_task, add_people):
-    title_task = ft.TextField(value=task_name, text_size=22, color="#a0cafd", read_only=False, border_width=0, width=None, max_lines=2, expand=True)
+    title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
     
-    btn_add_people = ft.FilledButton(
+    btn_add_people = ft.TextButton(
         content=ft.Row(
             [
-                ft.Text("Добавить исполнителя", color=ft.colors.WHITE),
-                ft.Icon(ft.icons.ADD, color=ft.colors.WHITE)
+                ft.Text("Добавить исполнителя"),
+                ft.Icon(ft.icons.PERSON_ADD)
             ],
-            width=180,
-            expand=True,
-            alignment=ft.MainAxisAlignment.START
         ),
-        on_click=lambda e: add_people(task_id, e)
+        on_click=lambda e: add_people(task_id, e),
     )
-       
     
     task_container = ft.Container(
         content=ft.Column(
@@ -334,22 +374,24 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                         ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.GREEN, tooltip="Сохранить заголовок", on_click=lambda e, title_task=title_task, task_id=task_id: confirm_name_task(title_task, task_id, e))
                     ],
                 ),
-                ft.TextButton(
-                    content=ft.Row(
-                        [
-                            ft.Text("Посмотреть все"),
-                            ft.Icon(ft.icons.ARROW_DROP_DOWN)
-                        ],
-                        width=135
-                    ),
-                    on_click=lambda e: open_task(e, task_container),
-                    expand=True,
+                ft.Row(  # Добавляем обе кнопки в один Row
+                    [
+                        ft.TextButton(
+                            content=ft.Row(
+                                [
+                                    ft.Text("Посмотреть все"),
+                                    ft.Icon(ft.icons.ARROW_DROP_DOWN)
+                                ],
+                            ),
+                            on_click=lambda e: open_task(e, task_container),
+                        ),
+                        btn_add_people  # Добавляем кнопку "Добавить исполнителя" в тот же Row
+                    ],
                 ),
                 ft.Container(
                     content=ft.Column(
                         [
                             ft.Text("Тут будет список задач", color=ft.colors.BLACK),
-                            btn_add_people
                         ],
                         alignment=ft.MainAxisAlignment.START,
                         spacing=10,
@@ -385,7 +427,7 @@ def create_nav_container(input_task, my_task_button, all_task_button, completed_
     navigation_container = ft.Container(
         content=ft.Column(
             [
-                input_task,
+                ft.Container(content=input_task, padding=ft.padding.only(top=20)),
                 my_task_button,
                 all_task_button,
                 completed_button
@@ -396,7 +438,7 @@ def create_nav_container(input_task, my_task_button, all_task_button, completed_
         ),
         padding=ft.padding.only(left=10),
         width=320,
-        border=ft.Border(right=ft.BorderSide(1))
+        border=ft.Border(right=ft.BorderSide(1)),
     )
     return navigation_container
 

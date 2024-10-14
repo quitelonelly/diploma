@@ -5,14 +5,14 @@ from threading import Timer
 
 from database.core import (
     insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
-    get_user_id_by_login, get_responsible_users_by_task_id
+    get_user_id_by_login, get_responsible_users
     )
 
 from frontend.layout import (
     create_input_task, create_my_task_btn, create_all_task_btn, create_completed_btn, create_account_btn,
     create_edit_btn, create_exit_btn, create_profile_dialog, create_task_container, create_header_container,
     create_nav_container, create_panel_my_task, create_panel_all_tasks, create_panel_done, create_screen_app,
-    create_add_person_dialog, create_my_task_container
+    create_add_person_dialog, create_my_task_container, create_responsible_person_dialog
 )
 
 def main_screen(page, login, password):
@@ -45,6 +45,22 @@ def main_screen(page, login, password):
     def add_people(task_id, e):
         show_add_person_dialog(task_id, e)
         
+    def show_responsible_users_dialog(task_id, e):
+        def close_dialog(dialog):
+            dialog.open = False
+            page.update()
+            
+        close_icon = ft.IconButton(
+            icon=ft.icons.CLOSE,
+            icon_color=ft.colors.WHITE,
+            on_click=lambda _: close_dialog(responsible_users_dialog)
+        )
+
+        responsible_users_dialog = create_responsible_person_dialog(get_responsible_users, task_id, get_users, close_icon)
+        page.dialog = responsible_users_dialog
+        responsible_users_dialog.open = True
+        page.update()
+        
     def repeater(interval, function):
         Timer(interval, repeater, [interval, function]).start()
         function()
@@ -65,9 +81,9 @@ def main_screen(page, login, password):
         tasks = get_tasks()
         
         for task in tasks:
-            responsible_users = get_responsible_users_by_task_id(task.id)
+            responsible_users = get_responsible_users(task.id)
             if user_id in responsible_users and not any(container.task_id == task.id for container in my_task_list.controls):
-                task_container = create_my_task_container(task.id, task.taskname, confirm_name_task, open_task)
+                task_container = create_my_task_container(task.id, task.taskname, confirm_name_task, open_task, show_responsible_users_dialog)
                 my_task_list.controls.append(task_container)
         page.update()
     
@@ -131,7 +147,7 @@ def main_screen(page, login, password):
     # Подсказка в окне редактирования логина
     login_tile_container = ft.Container(
         content=ft.ListTile(
-            title=ft.Text(login, color=ft.colors.WHITE, weight=ft.FontWeight.BOLD, size=24),
+            title=ft.Text(login, color=ft.colors.WHITE, weight=ft.FontWeight.BOLD, size=24, overflow=ft.TextOverflow.ELLIPSIS, width=280),
             subtitle=ft.Text("Ваш логин", color=ft.colors.WHITE70),
         ),
     )
