@@ -5,7 +5,7 @@ from threading import Timer
 
 from database.core import (
     insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
-    get_user_id_by_login, get_responsible_users
+    get_user_id_by_login, get_responsible_users, delete_task
     )
 
 from frontend.layout import (
@@ -38,13 +38,50 @@ def main_screen(page, login, password):
                 page.update()
                 time.sleep(0.007)  # задержка для создания анимации
             task_container.is_open = False
-            
+    
+    # Списки с задачами       
     all_task_list = ft.ListView(spacing=30, expand=True, padding=ft.padding.only(top=20))
     my_task_list = ft.ListView(spacing=30, expand=True, padding=ft.padding.only(top=20))
     
+    # Функция добавляет пользователя в задачу
     def add_people(task_id, e):
         show_add_person_dialog(task_id, e)
         
+    # Функция показывает диалоговое окно с профилем
+    def show_profile_dialog(e):
+        def close_dialog(dialog):
+            dialog.open = False
+            page.update()
+
+        close_icon = ft.IconButton(
+            icon=ft.icons.CLOSE,
+            icon_color=ft.colors.WHITE,
+            on_click=lambda _: close_dialog(profile_dialog)
+        )
+
+        profile_dialog = create_profile_dialog(close_icon, login_tile_container, password_tile_container, edit_button, exit_button)
+        page.dialog = profile_dialog
+        profile_dialog.open = True
+        page.update()
+    
+    # Функция показывает диалоговое окно добавления пользователя в задачу    
+    def show_add_person_dialog(task_id, e):
+        def close_dialog(dialog):
+            dialog.open = False
+            page.update()
+
+        close_icon = ft.IconButton(
+            icon=ft.icons.CLOSE,
+            icon_color=ft.colors.WHITE,
+            on_click=lambda _: close_dialog(add_person_dialog)
+        )
+
+        add_person_dialog = create_add_person_dialog(get_users, close_icon, page, insert_person, task_id, get_associated_users, remove_user_from_task)
+        page.dialog = add_person_dialog
+        add_person_dialog.open = True
+        page.update()
+    
+    # Функция показывает диалоговое окно с исполнителями задачи    
     def show_responsible_users_dialog(task_id, e):
         def close_dialog(dialog):
             dialog.open = False
@@ -60,21 +97,23 @@ def main_screen(page, login, password):
         page.dialog = responsible_users_dialog
         responsible_users_dialog.open = True
         page.update()
-        
+    
+    # Функция для интервального вызова функции    
     def repeater(interval, function):
         Timer(interval, repeater, [interval, function]).start()
         function()
     
-    # Функция загружает задачи
+    # Функция загружает все задачи
     def load_tasks():
         tasks = get_tasks()
         
         for task in tasks:
             if not any(container.task_id == task.id for container in all_task_list.controls):
-                task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people)
+                task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people, delete_task, all_task_list, page)
                 all_task_list.controls.append(task_container)
         page.update()
-    
+
+    # Функция загружает мои задачи
     def load_my_tasks():
         my_task_list.controls.clear()
         user_id = get_user_id_by_login(login)
@@ -87,7 +126,8 @@ def main_screen(page, login, password):
                 my_task_list.controls.append(task_container)
         page.update()
     
-    load_my_tasks()
+    # Интервальный вызов функций обновления списков задач
+    repeater(300, load_my_tasks)
     repeater(300, load_tasks)
             
     # Функции замены контента в главном контейнере    
@@ -119,7 +159,7 @@ def main_screen(page, login, password):
         
         title_task = "Новая задача"
         task_id = insert_task(title_task)
-        task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, add_people)
+        task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, add_people, delete_task, all_task_list, page)
         all_task_list.controls.append(task_container)
         page.update()
     
@@ -165,42 +205,10 @@ def main_screen(page, login, password):
 
     # Создаем кнопку "Выйти" с другим стилем
     exit_button = create_exit_btn()
-        
-    # Создаем контент для окна "Личный кабинет"
-    def show_profile_dialog(e):
-        def close_dialog(dialog):
-            dialog.open = False
-            page.update()
-
-        close_icon = ft.IconButton(
-            icon=ft.icons.CLOSE,
-            icon_color=ft.colors.WHITE,
-            on_click=lambda _: close_dialog(profile_dialog)
-        )
-
-        profile_dialog = create_profile_dialog(close_icon, login_tile_container, password_tile_container, edit_button, exit_button)
-        page.dialog = profile_dialog
-        profile_dialog.open = True
-        page.update()
-        
-    def show_add_person_dialog(task_id, e):
-        def close_dialog(dialog):
-            dialog.open = False
-            page.update()
-
-        close_icon = ft.IconButton(
-            icon=ft.icons.CLOSE,
-            icon_color=ft.colors.WHITE,
-            on_click=lambda _: close_dialog(add_person_dialog)
-        )
-
-        add_person_dialog = create_add_person_dialog(get_users, close_icon, page, insert_person, task_id, get_associated_users, remove_user_from_task)
-        page.dialog = add_person_dialog
-        add_person_dialog.open = True
-        page.update()
 
     edit_button.on_click = edit_profile
     exit_button.on_click = exit_profile
+    
     # Привязываем событие нажатия к открытию диалогового окна
     profile_button = ft.Container(
         content=account_button,

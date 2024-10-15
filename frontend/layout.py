@@ -241,14 +241,12 @@ def create_add_person_dialog(get_users, close_icon, page, insert_person, task_id
     users = get_users()
     user_list = ft.ListView(spacing=15, padding=ft.padding.all(10), expand=True)
     
-    # Get the users associated with the task
     associated_users = get_associated_users(task_id)
     
     for user in users:
         icon_button = ft.IconButton(icon=ft.icons.ADD, icon_color=ft.colors.GREEN, tooltip="Добавить")
-        icon_button.clicked = False  # Initialize a flag to track the icon state
+        icon_button.clicked = False  
         
-        # Check if the user is already associated with the task
         if user[0] in associated_users:
             icon_button.icon = ft.icons.CHECK_CIRCLE
             icon_button.tooltip = "Удалить"
@@ -260,16 +258,14 @@ def create_add_person_dialog(get_users, close_icon, page, insert_person, task_id
                     icon_button.icon = ft.icons.ADD
                     icon_button.tooltip = "Добавить"
                     print(f"Удален пользователь {user[1]}")
-                    # Remove the user from the task
                     remove_user_from_task(task_id, user[0])
                 else:
                     icon_button.icon = ft.icons.CHECK_CIRCLE
                     icon_button.tooltip = "Удалить"
                     print(f"Добавлен пользователь {user[1]}")
-                    # Add the user to the task
                     insert_person(task_id, user[0])
-                icon_button.clicked = not icon_button.clicked  # Toggle the flag
-                page.update()  # Update the page to reflect the changes
+                icon_button.clicked = not icon_button.clicked  
+                page.update()  
             return toggle_icon
 
         icon_button.on_click = create_toggle_icon(icon_button, user)
@@ -309,13 +305,13 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
                         ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.GREEN, tooltip="Сохранить заголовок", on_click=lambda e, title_task=title_task, task_id=task_id: confirm_name_task(title_task, task_id, e))
                     ],
                 ),
-                ft.Row(  # Добавляем Row для двух кнопок
+                ft.Row( 
                     [
                         ft.TextButton(
                             content=ft.Row(
                                 [
-                                    ft.Text("Посмотреть все"),
-                                    ft.Icon(ft.icons.ARROW_DROP_DOWN)
+                                    ft.Text("Посмотреть все", color = ft.colors.GREEN),
+                                    ft.Icon(ft.icons.ARROW_DROP_DOWN, color = ft.colors.GREEN)
                                 ],
                             ),
                             on_click=lambda e: open_task(e, task_container),
@@ -328,7 +324,7 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
                                 ],
                             ),
                             on_click=lambda e: show_responsible_users_dialog(task_id, e),
-                        )
+                        ),
                     ],
                 ),
                 ft.Container(
@@ -352,7 +348,7 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
     task_container.is_open = False  # добавляем атрибут is_open
     return task_container
 
-def create_task_container(task_id, task_name, confirm_name_task, open_task, add_people):
+def create_task_container(task_id, task_name, confirm_name_task, open_task, add_people, delete_task, all_task_list, page):
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
     
     btn_add_people = ft.TextButton(
@@ -379,13 +375,23 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                         ft.TextButton(
                             content=ft.Row(
                                 [
-                                    ft.Text("Посмотреть все"),
-                                    ft.Icon(ft.icons.ARROW_DROP_DOWN)
+                                    ft.Text("Посмотреть все", color = ft.colors.GREEN),
+                                    ft.Icon(ft.icons.ARROW_DROP_DOWN, color = ft.colors.GREEN)
                                 ],
                             ),
                             on_click=lambda e: open_task(e, task_container),
                         ),
-                        btn_add_people  # Добавляем кнопку "Добавить исполнителя" в тот же Row
+                        btn_add_people,
+                        
+                        ft.TextButton(
+                            content=ft.Row(
+                                [
+                                    ft.Text("Удалить задачу", color = ft.colors.RED),
+                                    ft.Icon(ft.icons.DELETE, color = ft.colors.RED)
+                                ],
+                            ),
+                            on_click=lambda e: delete_task(task_id, task_container, all_task_list, page),
+                        ),
                     ],
                 ),
                 ft.Container(

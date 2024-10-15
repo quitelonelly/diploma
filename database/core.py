@@ -81,6 +81,21 @@ def update_task(task_id, new_title):
         stmt = update(tasks_table).where(tasks_table.c.id == task_id).values(taskname=new_title)
         conn.execute(stmt)
         conn.commit()
+
+# Функция для удаления задачи       
+def delete_task(task_id, task_container, all_task_list, page):
+    with sync_engine.connect() as conn:
+        # Удаляем связи с таблицей responsible
+        conn.execute(delete(responsible_table).where(responsible_table.c.id_task == task_id))
+        
+        # Удаляем задачу
+        stmt = delete(tasks_table).where(tasks_table.c.id == task_id)
+        conn.execute(stmt)
+        conn.commit()
+    
+    # Удаляем задачу из списка 
+    all_task_list.controls.remove(task_container)
+    page.update()
         
 # Функция получения всех пользователей из БД
 def get_users():
