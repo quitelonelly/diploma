@@ -30,5 +30,11 @@ responsible_table = Table(
 )
 
 # Таблица с подзадачами
-
+subtask_table = Table(
+    "subtask",
+    metadata_obj,
+    Column("id", BigInteger, primary_key=True),
+    Column("id_task", BigInteger, ForeignKey("tasks.id")),
+    Column("subtaskname", String),
+)
 

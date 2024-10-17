@@ -5,14 +5,14 @@ from threading import Timer
 
 from database.core import (
     insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
-    get_user_id_by_login, get_responsible_users, delete_task
+    get_user_id_by_login, get_responsible_users, delete_task, insert_subtask
     )
 
 from frontend.layout import (
     create_input_task, create_my_task_btn, create_all_task_btn, create_completed_btn, create_account_btn,
     create_edit_btn, create_exit_btn, create_profile_dialog, create_task_container, create_header_container,
     create_nav_container, create_panel_my_task, create_panel_all_tasks, create_panel_done, create_screen_app,
-    create_add_person_dialog, create_my_task_container, create_responsible_person_dialog
+    create_add_person_dialog, create_my_task_container, create_responsible_person_dialog, create_confirm_delete_task_dialog,
 )
 
 def main_screen(page, login, password):
@@ -24,16 +24,16 @@ def main_screen(page, login, password):
         print(f"Имя " + title_task.value + " сохранено!")
         
     # Функция открывает контейнер задачи    
-    def open_task(e, task_container):
+    def open_task(task_container, e):
         content_container = task_container.content.controls[2]
         if not task_container.is_open:  # если контейнер не расширен
-            for i in range(0, 300, 10):  # цикл для изменения высоты контейнера
+            for i in range(0, 380, 10):  # цикл для изменения высоты контейнера
                 content_container.height = i
                 page.update()
                 time.sleep(0.007)  # задержка для создания анимации
             task_container.is_open = True
         else:  # если контейнер уже расширен
-            for i in range(300, 0, -10):  # цикл для изменения высоты контейнера
+            for i in range(380, 0, -10):  # цикл для изменения высоты контейнера
                 content_container.height = i
                 page.update()
                 time.sleep(0.007)  # задержка для создания анимации
@@ -41,6 +41,7 @@ def main_screen(page, login, password):
     
     # Списки с задачами       
     all_task_list = ft.ListView(spacing=30, expand=True, padding=ft.padding.only(top=20))
+    
     my_task_list = ft.ListView(spacing=30, expand=True, padding=ft.padding.only(top=20))
     
     # Функция добавляет пользователя в задачу
@@ -97,6 +98,61 @@ def main_screen(page, login, password):
         page.dialog = responsible_users_dialog
         responsible_users_dialog.open = True
         page.update()
+        
+    def show_confirm_delete_task_dialog(task_id, e, task_container, all_task_list, page):
+        def close_dialog(dialog):
+            dialog.open = False
+            page.update()
+            
+        close_icon = ft.IconButton(
+            icon=ft.icons.CLOSE,
+            icon_color=ft.colors.WHITE,
+            on_click=lambda _: close_dialog(confirm_delete_task_dialog)
+        )
+
+        confirm_delete_task_dialog = create_confirm_delete_task_dialog(delete_task, task_id, task_container, all_task_list, page, close_icon)
+        page.dialog = confirm_delete_task_dialog
+        confirm_delete_task_dialog.open = True
+        page.update()
+        
+    # Функция добавляет задачу в список        
+    def add_task(e):
+        print("Добавлена задача")
+        
+        title_task = "Новая задача"
+        task_id = insert_task(title_task)
+        task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, 
+                                               add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask)
+        all_task_list.controls.append(task_container)
+        page.update()    
+     
+    def add_subtask(task_id, in_all_task_list, e):
+        print("Добавлена подзадача")
+        
+        # Запрашиваем имя подзадачи у пользователя
+        subtask_name = "Новая подзадача"  # Здесь можно добавить логику для ввода имени подзадачи пользователем
+        
+        # Вставляем подзадачу в базу данных (если необходимо)
+        subtask_id = insert_subtask(subtask_name, task_id)
+
+        # Создаем чекбокс для подзадачи
+        subtask_checkbox = ft.Checkbox(
+            label=subtask_name,  
+            value=False,
+            on_change=lambda e: toggle_subtask(subtask_name, e.control.value)  # Обработчик изменения состояния
+        )
+
+        # Обработчик для переключения состояния подзадачи
+        def toggle_subtask(name, is_checked):
+            if is_checked:
+                print(f"Подзадача '{name}' выполнена!")
+            else:
+                print(f"Подзадача '{name}' не выполнена!")
+
+        # Добавляем чекбокс в список подзадач
+        in_all_task_list.controls.append(subtask_checkbox)
+        in_all_task_list.update()  # Обновляем список подзадач
+        page.update()
     
     # Функция для интервального вызова функции    
     def repeater(interval, function):
@@ -109,7 +165,8 @@ def main_screen(page, login, password):
         
         for task in tasks:
             if not any(container.task_id == task.id for container in all_task_list.controls):
-                task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people, delete_task, all_task_list, page)
+                task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, 
+                                                       add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask)
                 all_task_list.controls.append(task_container)
         page.update()
 
@@ -152,17 +209,7 @@ def main_screen(page, login, password):
 
     def exit_profile(e):
         print("Выход из профиля")
-    
-    # Функция добавляет задачу в список        
-    def add_task(e):
-        print("Добавлена задача")
         
-        title_task = "Новая задача"
-        task_id = insert_task(title_task)
-        task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, add_people, delete_task, all_task_list, page)
-        all_task_list.controls.append(task_container)
-        page.update()
-    
     # Создание кнопок навигации и инпута поиска
     input_task = create_input_task()
     

@@ -1,4 +1,4 @@
-from database.models import metadata_obj, users_table, tasks_table, responsible_table
+from database.models import metadata_obj, users_table, tasks_table, responsible_table, subtask_table
 from database.db import sync_engine
 from sqlalchemy import insert, select, update, delete
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -70,10 +70,24 @@ def insert_task(title_task):
         stmt = insert(tasks_table).values(
             {"taskname": title_task}
         ).returning(tasks_table.c.id)
+        
         result = conn.execute(stmt)
         task_id = result.scalar()
+        
         conn.commit()
         return task_id
+    
+def insert_subtask(subtask_name, task_id):
+    with sync_engine.connect() as conn:
+        stmt = insert(subtask_table).values(
+            {"subtaskname": subtask_name, "id_task": task_id}
+        ).returning(subtask_table.c.id)
+        
+        result = conn.execute(stmt)
+        subtask_id = result.scalar()
+        
+        conn.commit()
+        return subtask_id
 
 # Функция для обновления заголовка задачи    
 def update_task(task_id, new_title):
@@ -83,15 +97,20 @@ def update_task(task_id, new_title):
         conn.commit()
 
 # Функция для удаления задачи       
-def delete_task(task_id, task_container, all_task_list, page):
+def delete_task(task_id, task_container, all_task_list, page, dialog):
     with sync_engine.connect() as conn:
         # Удаляем связи с таблицей responsible
         conn.execute(delete(responsible_table).where(responsible_table.c.id_task == task_id))
+        conn.execute(delete(subtask_table).where(subtask_table.c.id_task == task_id))
         
         # Удаляем задачу
         stmt = delete(tasks_table).where(tasks_table.c.id == task_id)
         conn.execute(stmt)
         conn.commit()
+    
+    # Закрываем диалоговое окно
+    dialog.open = False
+    page.update()
     
     # Удаляем задачу из списка 
     all_task_list.controls.remove(task_container)
