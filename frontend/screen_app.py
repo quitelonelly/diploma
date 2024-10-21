@@ -5,7 +5,7 @@ from threading import Timer
 
 from database.core import (
     insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
-    get_user_id_by_login, get_responsible_users, delete_task, insert_subtask
+    get_user_id_by_login, get_responsible_users, delete_task, insert_subtask, update_subtask
     )
 
 from frontend.layout import (
@@ -129,30 +129,64 @@ def main_screen(page, login, password):
     def add_subtask(task_id, in_all_task_list, e):
         print("Добавлена подзадача")
         
-        # Запрашиваем имя подзадачи у пользователя
-        subtask_name = "Новая подзадача"  # Здесь можно добавить логику для ввода имени подзадачи пользователем
-        
-        # Вставляем подзадачу в базу данных (если необходимо)
-        subtask_id = insert_subtask(subtask_name, task_id)
+        # Создаем текстовое поле для ввода имени подзадачи
+        subtask_input = ft.TextField(
+            label="Введите название", 
+            border_width=0, 
+            autofocus=True,
+            width=250,
+            max_lines=5
+        )
 
         # Создаем чекбокс для подзадачи
         subtask_checkbox = ft.Checkbox(
-            label=subtask_name,  
             value=False,
-            on_change=lambda e: toggle_subtask(subtask_name, e.control.value)  # Обработчик изменения состояния
+            on_change=lambda e: toggle_subtask(subtask_input.value, e.control.value)  # Обработчик изменения состояния
         )
 
-        # Обработчик для переключения состояния подзадачи
-        def toggle_subtask(name, is_checked):
-            if is_checked:
-                print(f"Подзадача '{name}' выполнена!")
-            else:
-                print(f"Подзадача '{name}' не выполнена!")
+        # Создаем строку, содержащую чекбокс и текстовое поле
+        subtask_row = ft.Row(
+            controls=[
+                subtask_checkbox,
+                subtask_input
+            ],
+            alignment=ft.MainAxisAlignment.START
+        )
+        
+        # Вставляем подзадачу в базу данных с начальным значением "Новая подзадача"
+        subtask_id = insert_subtask("Новая подзадача", task_id)
 
-        # Добавляем чекбокс в список подзадач
-        in_all_task_list.controls.append(subtask_checkbox)
+        # Переменная для хранения таймера
+        update_timer = None
+
+        # Обработчик для обновления подзадачи в базе данных при изменении текста
+        def on_change_subtask_name(e):
+            nonlocal update_timer
+            # Отменяем предыдущий таймер, если он существует
+            if update_timer is not None:
+                update_timer.cancel()
+
+            # Устанавливаем новый таймер на 1 секунду
+            update_timer = Timer(5.0, lambda: update_subtask(subtask_id, subtask_input.value))
+            update_timer.start()
+
+        # Привязываем обработчик изменения текстового поля
+        subtask_input.on_change = on_change_subtask_name
+
+        # Добавляем строку с чекбоксом в список подзадач
+        in_all_task_list.controls.append(subtask_row)
         in_all_task_list.update()  # Обновляем список подзадач
-        page.update()
+        page.update()  # Обновляем страницу
+
+        # Очищаем текстовое поле после добавления
+        subtask_input.value = ""
+
+    # Обработчик для переключения состояния подзадачи
+    def toggle_subtask(name, is_checked):
+        if is_checked:
+            print(f"Подзадача '{name}' выполнена!")
+        else:
+            print(f"Подзадача '{name}' не выполнена!")
     
     # Функция для интервального вызова функции    
     def repeater(interval, function):

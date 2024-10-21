@@ -416,6 +416,9 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
                     ),
+                    border=ft.border.only(bottom=ft.border.BorderSide(1.5)),
+                    animate_opacity=900,  # добавляем анимацию прозрачности
+                    opacity=1,  # начальная прозрачность
                 ),
                 in_all_task_list,
                 btn_add_subtask, 
@@ -423,8 +426,8 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
             alignment=ft.MainAxisAlignment.START,
             spacing=10,
         ),
-        width=270,
-        height=340,
+        width=300,
+        height=360,
         padding=ft.padding.all(10),
         bgcolor="#111418",  # Измените цвет фона на светло-голубой
         border=ft.border.all(1.5),

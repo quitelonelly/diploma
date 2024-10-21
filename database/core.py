@@ -96,6 +96,13 @@ def update_task(task_id, new_title):
         conn.execute(stmt)
         conn.commit()
 
+# Фукнкция для обновления заголовка подзадачи      
+def update_subtask(subtask_id, new_title):
+    with sync_engine.connect() as conn:
+        stmt = update(subtask_table).where(subtask_table.c.id == subtask_id).values(subtaskname=new_title)
+        conn.execute(stmt)
+        conn.commit()
+
 # Функция для удаления задачи       
 def delete_task(task_id, task_container, all_task_list, page, dialog):
     with sync_engine.connect() as conn:
