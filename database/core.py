@@ -80,7 +80,7 @@ def insert_task(title_task):
 def insert_subtask(subtask_name, task_id):
     with sync_engine.connect() as conn:
         stmt = insert(subtask_table).values(
-            {"subtaskname": subtask_name, "id_task": task_id}
+            {"subtaskname": subtask_name, "id_task": task_id, "status": "В процессе"}
         ).returning(subtask_table.c.id)
         
         result = conn.execute(stmt)

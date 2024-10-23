@@ -393,7 +393,9 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
     progress_bar = ft.ProgressBar(width=200, height=10, color=ft.colors.GREEN, value=0, bar_height=10, border_radius=10)
     
-    in_all_task_list = ft.ListView(spacing=30, height=240, padding=ft.padding.only(top=10))
+    in_all_task_list_process = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
+    in_all_task_list_test = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
+    in_all_task_list_completed = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     
     btn_add_subtask = ft.TextButton(
         content=ft.Row(
@@ -403,10 +405,22 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
             ],
         ),
         width=190,
-        on_click=lambda e: add_subtask(task_id, in_all_task_list, e),
+        on_click=lambda e: add_subtask(task_id, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, e),
     )
     
-    subtask_container = ft.Container(
+    # Создаем кнопку загрузки файла
+    btn_upload_file = ft.TextButton(
+        content=ft.Row(
+            [
+                ft.Text("Загрузить файл"),
+                ft.Icon(ft.icons.UPLOAD_FILE)
+            ],
+        ),
+        width=170,
+        on_click=lambda e: print("Загрузка файла..."), 
+    )
+    
+    subtask_container_process = ft.Container(
         content=ft.Column(
             [
                 ft.Container(
@@ -420,15 +434,86 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                     animate_opacity=900,  # добавляем анимацию прозрачности
                     opacity=1,  # начальная прозрачность
                 ),
-                in_all_task_list,
-                btn_add_subtask, 
+                in_all_task_list_process,
+                ft.Container(
+                    content=ft.Column(
+                        [
+                            btn_add_subtask,
+                            btn_upload_file
+                        ]
+                    ),
+                    padding=ft.padding.only(left=10, bottom=10),
+                ),
             ],
             alignment=ft.MainAxisAlignment.START,
             spacing=10,
         ),
-        width=300,
-        height=360,
-        padding=ft.padding.all(10),
+        width=280,
+        height=380,
+        bgcolor="#111418",  # Измените цвет фона на светло-голубой
+        border=ft.border.all(1.5),
+        border_radius=10,
+        animate_opacity=900,  # добавляем анимацию прозрачности
+        opacity=1,  # начальная прозрачность
+    )
+    
+    subtask_container_test = ft.Container(
+        content=ft.Column(
+            [
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Text("НА ПРОВЕРКЕ", size=22, color=ft.colors.WHITE)
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
+                    border=ft.border.only(bottom=ft.border.BorderSide(1.5)),
+                    animate_opacity=900,  # добавляем анимацию прозрачности
+                    opacity=1,  # начальная прозрачность
+                ),
+                in_all_task_list_test,
+                ft.Container(
+                    content=ft.Column(
+                        [
+                            ft.Text("ФАЙЛ.rar", size=22)
+                        ]
+                    ),
+                    bgcolor=ft.colors.GREY,
+                    padding=ft.padding.all(15),
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.START,
+            spacing=10,
+        ),
+        width=280,
+        height=380,
+        bgcolor="#111418",  # Измените цвет фона на светло-голубой
+        border=ft.border.all(1.5),
+        border_radius=10,
+        animate_opacity=900,  # добавляем анимацию прозрачности
+        opacity=1,  # начальная прозрачность
+    )
+    
+    subtask_container_completed = ft.Container(
+        content=ft.Column(
+            [
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Text("ГОТОВО", size=22, color=ft.colors.WHITE)
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
+                    border=ft.border.only(bottom=ft.border.BorderSide(1.5)),
+                    animate_opacity=900,  # добавляем анимацию прозрачности
+                    opacity=1,  # начальная прозрачность
+                ),
+                in_all_task_list_completed,
+            ],
+            spacing=10,
+        ),
+        width=280,
+        height=380,
         bgcolor="#111418",  # Измените цвет фона на светло-голубой
         border=ft.border.all(1.5),
         border_radius=10,
@@ -452,7 +537,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                 ft.Row(
                     [
                         title_task,
-                        ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.GREEN, tooltip="Сохранить заголовок", on_click=lambda e, title_task=title_task, task_id=task_id: confirm_name_task(title_task, task_id, e))
+                        ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.GREEN, tooltip="Сохранить изменения", on_click=lambda e, title_task=title_task, task_id=task_id: confirm_name_task(title_task, task_id, e))
                     ],
                 ),
                 ft.Row(  # Добавляем обе кнопки в один Row
@@ -482,14 +567,15 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                     ],
                 ),
                 ft.Container(
-                    content=ft.Column(
+                    content=ft.Row(
                         [
-                            subtask_container,  
+                            subtask_container_process, 
+                            subtask_container_test,
+                            subtask_container_completed 
                         ],
-                        alignment=ft.MainAxisAlignment.START,
+                        alignment=ft.MainAxisAlignment.CENTER,
                         spacing=10,
                     ),
-                    padding=ft.padding.all(10),
                     height=0,  # начальная высота контейнера
                 ),
             ],
@@ -564,7 +650,6 @@ def create_panel_my_task(my_task_list, load_my_tasks):
             spacing=10,
             expand=True,
         ),
-        padding=ft.padding.all(10),
     )
     return panel_my_tasks
 
@@ -589,7 +674,6 @@ def create_panel_all_tasks(add_task, all_task_list):
             spacing=10,
             expand=True,
         ),
-        padding=ft.padding.all(10),
     )
     return panel_all_tasks
 
@@ -608,7 +692,6 @@ def create_panel_done():
             spacing=10,
             expand=True,
         ),
-        padding=ft.padding.all(10),
     )
     return panel_done
 
