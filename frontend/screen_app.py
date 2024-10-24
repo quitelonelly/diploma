@@ -5,7 +5,7 @@ from threading import Timer
 
 from database.core import (
     insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
-    get_user_id_by_login, get_responsible_users, delete_task, insert_subtask, update_subtask
+    get_user_id_by_login, get_responsible_users, delete_task, insert_subtask, update_subtask, update_subtask_status
     )
 
 from frontend.layout import (
@@ -127,16 +127,20 @@ def main_screen(page, login, password):
                                                add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask)
         all_task_list.controls.append(task_container)
         page.update()    
-     
+    
+    # Функция добавляет подзадачу в список 
     def add_subtask(task_id, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, e):
         print("Добавлена подзадача")
+        
+        # Вставляем подзадачу в базу данных с начальным значением "Новая подзадача"
+        subtask_id = insert_subtask("Новая подзадача", task_id)
         
         # Создаем текстовое поле для ввода имени подзадачи
         subtask_input = ft.TextField(
             label="Введите название", 
             border_width=0, 
             autofocus=True,
-            width=250,
+            width=240,
             max_lines=5
         )
 
@@ -145,7 +149,7 @@ def main_screen(page, login, password):
             value=False,
             on_change=lambda e: toggle_subtask(
                 subtask_input.value, e.control.value, in_all_task_list_process, in_all_task_list_test, 
-                in_all_task_list_completed, subtask_row  # Передаем текущую строку подзадачи
+                in_all_task_list_completed, subtask_row, subtask_id  # Передаем текущую строку подзадачи
             )  # Обработчик изменения состояния
         )
 
@@ -157,9 +161,6 @@ def main_screen(page, login, password):
             ],
             alignment=ft.MainAxisAlignment.START
         )
-        
-        # Вставляем подзадачу в базу данных с начальным значением "Новая подзадача"
-        subtask_id = insert_subtask("Новая подзадача", task_id)
 
         # Переменная для хранения таймера
         update_timer = None
@@ -187,10 +188,10 @@ def main_screen(page, login, password):
         subtask_input.value = ""
 
     # Обработчик для переключения состояния подзадачи
-    def toggle_subtask(name, is_checked, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, subtask_row):
+    def toggle_subtask(name, is_checked, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, subtask_row, subtask_id):
     # Проверяем, находится ли подзадача в списке "В процессе"
         if subtask_row not in in_all_task_list_process.controls:
-            print(f"Подзадача '{name}' отсутствует в списке 'В процессе'. Ничего не делаем.")
+            print(f"Подзадача '{name}' отсутствует в списке 'В процессе'.")
             return  # Если подзадача не в списке, выходим из функции
 
         if is_checked:
@@ -203,6 +204,7 @@ def main_screen(page, login, password):
             
             # Добавляем подзадачу в список "На проверке"
             in_all_task_list_test.controls.append(subtask_row)
+            update_subtask_status(subtask_id)
         else:
             print(f"Подзадача '{name}' не выполнена!")
             

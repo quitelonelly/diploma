@@ -333,6 +333,122 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
     progress_bar = ft.ProgressBar(width=200, height=10, color=ft.colors.GREEN, value=0, bar_height=10, border_radius=10)
     
+    in_all_task_list_process = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
+    in_all_task_list_test = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
+    in_all_task_list_completed = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
+    
+    # Создаем кнопку загрузки файла
+    btn_upload_file = ft.TextButton(
+        content=ft.Row(
+            [
+                ft.Text("Загрузить файл"),
+                ft.Icon(ft.icons.UPLOAD_FILE)
+            ],
+        ),
+        width=170,
+        on_click=lambda e: print("Загрузка файла..."), 
+    )
+    
+    subtask_container_process = ft.Container(
+        content=ft.Column(
+            [
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Text("В ПРОЦЕССЕ", size=22, color=ft.colors.WHITE)
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
+                    border=ft.border.only(bottom=ft.border.BorderSide(1.5)),
+                    animate_opacity=900,  # добавляем анимацию прозрачности
+                    opacity=1,  # начальная прозрачность
+                ),
+                in_all_task_list_process,
+                ft.Container(
+                    content=ft.Column(
+                        [
+                            btn_upload_file
+                        ]
+                    ),
+                    padding=ft.padding.only(left=10, bottom=10),
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.START,
+            spacing=10,
+        ),
+        width=280,
+        height=375,
+        bgcolor="#111418",  # Измените цвет фона на светло-голубой
+        border=ft.border.all(1.5),
+        border_radius=10,
+        animate_opacity=900,  # добавляем анимацию прозрачности
+        opacity=1,  # начальная прозрачность
+    )
+    
+    subtask_container_test = ft.Container(
+        content=ft.Column(
+            [
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Text("НА ПРОВЕРКЕ", size=22, color=ft.colors.WHITE)
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
+                    border=ft.border.only(bottom=ft.border.BorderSide(1.5)),
+                    animate_opacity=900,  # добавляем анимацию прозрачности
+                    opacity=1,  # начальная прозрачность
+                ),
+                in_all_task_list_test,
+                ft.Container(
+                    content=ft.Column(
+                        [
+                            ft.Text("ФАЙЛ.rar", size=22)
+                        ]
+                    ),
+                    bgcolor=ft.colors.GREY,
+                    padding=ft.padding.all(15),
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.START,
+            spacing=10,
+        ),
+        width=280,
+        height=375,
+        bgcolor="#111418",  # Измените цвет фона на светло-голубой
+        border=ft.border.all(1.5),
+        border_radius=10,
+        animate_opacity=900,  # добавляем анимацию прозрачности
+        opacity=1,  # начальная прозрачность
+    )
+    
+    subtask_container_completed = ft.Container(
+        content=ft.Column(
+            [
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Text("ГОТОВО", size=22, color=ft.colors.WHITE)
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
+                    border=ft.border.only(bottom=ft.border.BorderSide(1.5)),
+                    animate_opacity=900,  # добавляем анимацию прозрачности
+                    opacity=1,  # начальная прозрачность
+                ),
+                in_all_task_list_completed,
+            ],
+            spacing=10,
+        ),
+        width=280,
+        height=375,
+        bgcolor="#111418",  # Измените цвет фона на светло-голубой
+        border=ft.border.all(1.5),
+        border_radius=10,
+        animate_opacity=900,  # добавляем анимацию прозрачности
+        opacity=1,  # начальная прозрачность
+    )
+    
     my_task_container = ft.Container(
         content=ft.Column(
             [
@@ -367,12 +483,13 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
                     ],
                 ),
                 ft.Container(
-                    content=ft.Column(
+                    content=ft.Row(
                         [
-                            ft.Text("Тут будет список задач", color=ft.colors.BLACK),
+                            subtask_container_process, 
+                            subtask_container_test,
+                            subtask_container_completed 
                         ],
-                        alignment=ft.MainAxisAlignment.START,
-                        spacing=10,
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     ),
                     padding=ft.padding.all(10),
                     height=0,  # начальная высота контейнера
@@ -412,8 +529,8 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
     btn_upload_file = ft.TextButton(
         content=ft.Row(
             [
-                ft.Text("Загрузить файл"),
-                ft.Icon(ft.icons.UPLOAD_FILE)
+                ft.Text("Прикрепить файл"),
+                ft.Icon(ft.icons.FILE_PRESENT)
             ],
         ),
         width=170,
@@ -472,14 +589,16 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                     opacity=1,  # начальная прозрачность
                 ),
                 in_all_task_list_test,
+                
                 ft.Container(
-                    content=ft.Column(
+                    content=ft.Row(
                         [
-                            ft.Text("ФАЙЛ.rar", size=22)
-                        ]
+                            ft.Icon(ft.icons.UPLOAD_FILE, color=ft.colors.GREY),  
+                            ft.Text("ФАЙЛ.rar", size=20, color=ft.colors.GREY),  
+                        ],
+                        alignment=ft.MainAxisAlignment.START,
                     ),
-                    bgcolor=ft.colors.GREY,
-                    padding=ft.padding.all(15),
+                    padding=ft.padding.only(bottom=15, left=20), 
                 ),
             ],
             alignment=ft.MainAxisAlignment.START,
@@ -576,6 +695,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                         alignment=ft.MainAxisAlignment.CENTER,
                         spacing=10,
                     ),
+                    padding=ft.padding.all(10),
                     height=0,  # начальная высота контейнера
                 ),
             ],

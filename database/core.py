@@ -76,7 +76,8 @@ def insert_task(title_task):
         
         conn.commit()
         return task_id
-    
+
+# Функция для записи подзадачи в БД
 def insert_subtask(subtask_name, task_id):
     with sync_engine.connect() as conn:
         stmt = insert(subtask_table).values(
@@ -100,6 +101,13 @@ def update_task(task_id, new_title):
 def update_subtask(subtask_id, new_title):
     with sync_engine.connect() as conn:
         stmt = update(subtask_table).where(subtask_table.c.id == subtask_id).values(subtaskname=new_title)
+        conn.execute(stmt)
+        conn.commit()
+
+# Функция обновления статуса подзадачи       
+def update_subtask_status(subtask_id):
+    with sync_engine.connect() as conn:
+        stmt = update(subtask_table).where(subtask_table.c.id == subtask_id).values(status="На проверке")
         conn.execute(stmt)
         conn.commit()
 
