@@ -330,7 +330,7 @@ def create_confirm_delete_task_dialog(delete_task, task_id, task_container, all_
     return confirm_delete_task_dialog
 
 def create_my_task_container(task_id, task_name, confirm_name_task, open_task, show_responsible_users_dialog):
-    title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
+    title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=True, border_width=0, width=None, max_lines=2, expand=True)
     progress_bar = ft.ProgressBar(width=200, height=10, color=ft.colors.GREEN, value=0, bar_height=10, border_radius=10)
     
     in_all_task_list_process = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
@@ -508,6 +508,8 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                           all_task_list, page, show_confirm_delete_task_dialog, add_subtask, is_admin, show_responsible_users_dialog):
     
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
+    title_task_user = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=True, border_width=0, width=None, max_lines=2, expand=True)
+    
     progress_bar = ft.ProgressBar(width=200, height=10, color=ft.colors.GREEN, value=0, bar_height=10, border_radius=10)
     
     in_all_task_list_process = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
@@ -712,7 +714,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                 [
                     ft.Row(
                         [
-                            title_task,
+                            title_task_user
                         ],
                     ),
                     ft.Row(  # Добавляем обе кнопки в один Row
