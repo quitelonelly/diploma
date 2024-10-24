@@ -401,13 +401,14 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
                 ),
                 in_all_task_list_test,
                 ft.Container(
-                    content=ft.Column(
+                    content=ft.Row(
                         [
-                            ft.Text("ФАЙЛ.rar", size=22)
-                        ]
+                            ft.Icon(ft.icons.UPLOAD_FILE, color=ft.colors.GREY),  
+                            ft.Text("ФАЙЛ.rar", size=20, color=ft.colors.GREY),  
+                        ],
+                        alignment=ft.MainAxisAlignment.START,
                     ),
-                    bgcolor=ft.colors.GREY,
-                    padding=ft.padding.all(15),
+                    padding=ft.padding.only(bottom=15, left=20), 
                 ),
             ],
             alignment=ft.MainAxisAlignment.START,
@@ -455,7 +456,6 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
                 ft.Row(
                     [
                         title_task,
-                        ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.GREEN, tooltip="Сохранить заголовок", on_click=lambda e, title_task=title_task, task_id=task_id: confirm_name_task(title_task, task_id, e))
                     ],
                 ),
                 ft.Row( 
@@ -505,7 +505,7 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
     return my_task_container
 
 def create_task_container(task_id, task_name, confirm_name_task, open_task, add_people, 
-                          all_task_list, page, show_confirm_delete_task_dialog, add_subtask):
+                          all_task_list, page, show_confirm_delete_task_dialog, add_subtask, is_admin, show_responsible_users_dialog):
     
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
     progress_bar = ft.ProgressBar(width=200, height=10, color=ft.colors.GREEN, value=0, bar_height=10, border_radius=10)
@@ -514,6 +514,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
     in_all_task_list_test = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     in_all_task_list_completed = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     
+    # Добавляем кнопку добавления подзадачи только для администраторов
     btn_add_subtask = ft.TextButton(
         content=ft.Row(
             [
@@ -523,8 +524,8 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
         ),
         width=190,
         on_click=lambda e: add_subtask(task_id, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, e),
-    )
-    
+    ) if is_admin else None  # Условие для отображения кнопки
+
     # Создаем кнопку загрузки файла
     btn_upload_file = ft.TextButton(
         content=ft.Row(
@@ -555,7 +556,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                 ft.Container(
                     content=ft.Column(
                         [
-                            btn_add_subtask,
+                            btn_add_subtask if btn_add_subtask is not None else ft.Container(),  # Проверка на None
                             btn_upload_file
                         ]
                     ),
@@ -607,7 +608,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
         width=280,
         height=380,
         bgcolor="#111418",  # Измените цвет фона на светло-голубой
-        border=ft.border.all(1.5),
+        border=ft.border.all (1.5),
         border_radius=10,
         animate_opacity=900,  # добавляем анимацию прозрачности
         opacity=1,  # начальная прозрачность
@@ -617,7 +618,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
         content=ft.Column(
             [
                 ft.Container(
-                    content=ft.Row(
+                    content=ft.Row (
                         [
                             ft.Text("ГОТОВО", size=22, color=ft.colors.WHITE)
                         ],
@@ -640,70 +641,127 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
         opacity=1,  # начальная прозрачность
     )
     
-    btn_add_people = ft.TextButton(
-        content=ft.Row(
-            [
-                ft.Text("Добавить исполнителя"),
-                ft.Icon(ft.icons.PERSON_ADD)
-            ],
-        ),
-        on_click=lambda e: add_people(task_id, e),
-    )
-    
-    all_task_container = ft.Container(
-        content=ft.Column(
-            [
-                ft.Row(
-                    [
-                        title_task,
-                        ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.GREEN, tooltip="Сохранить изменения", on_click=lambda e, title_task=title_task, task_id=task_id: confirm_name_task(title_task, task_id, e))
-                    ],
-                ),
-                ft.Row(  # Добавляем обе кнопки в один Row
-                    [
-                        ft.TextButton(
-                            content=ft.Row(
-                                [
-                                    ft.Text("Посмотреть все", color = ft.colors.GREEN),
-                                    ft.Icon(ft.icons.ARROW_DROP_DOWN, color = ft.colors.GREEN)
-                                ],
-                            ),
-                            on_click=lambda e: open_task(all_task_container, e),
-                        ),
-                        btn_add_people,
-                        
-                        ft.TextButton(
-                            content=ft.Row(
-                                [
-                                    ft.Text("Удалить задачу", color = ft.colors.RED),
-                                    ft.Icon(ft.icons.DELETE, color = ft.colors.RED)
-                                ],
-                            ),
-                            on_click=lambda e: show_confirm_delete_task_dialog(task_id, e, all_task_container, all_task_list, page),
-                        ),
-                        
-                        progress_bar,
-                    ],
-                ),
-                ft.Container(
-                    content=ft.Row(
+    if is_admin:
+        btn_add_people = ft.TextButton(
+            content=ft.Row(
+                [
+                    ft.Text("Добавить исполнителя"),
+                    ft.Icon(ft.icons.PERSON_ADD)
+                ],
+            ),
+            on_click=lambda e: add_people(task_id, e),
+        )
+        
+        all_task_container = ft.Container(
+            content=ft.Column(
+                [
+                    ft.Row(
                         [
-                            subtask_container_process, 
-                            subtask_container_test,
-                            subtask_container_completed 
+                            title_task,
+                            ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.GREEN, tooltip="Сохранить изменения", on_click=lambda e, title_task=title_task, task_id=task_id: confirm_name_task(title_task, task_id, e))
                         ],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        spacing=10,
                     ),
-                    padding=ft.padding.all(10),
-                    height=0,  # начальная высота контейнера
-                ),
-            ],
-        ),
-        bgcolor="#f7f7f7",
-        border_radius=10,
-        padding=ft.padding.all(10)
-    )
+                    ft.Row(  # Добавляем обе кнопки в один Row
+                        [
+                            ft.TextButton(
+                                content=ft.Row(
+                                    [
+                                        ft.Text("Посмотреть все", color = ft.colors.GREEN),
+                                        ft.Icon(ft.icons.ARROW_DROP_DOWN, color = ft.colors.GREEN)
+                                    ],
+                                ),
+                                on_click=lambda e: open_task(all_task_container, e),
+                            ),
+                            btn_add_people,
+                            
+                            ft.TextButton(
+                                content=ft.Row(
+                                    [
+                                        ft.Text("Удалить задачу", color = ft.colors.RED),
+                                        ft.Icon(ft.icons.DELETE, color = ft.colors.RED)
+                                    ],
+                                ),
+                                on_click=lambda e: show_confirm_delete_task_dialog(task_id, e, all_task_container, all_task_list, page),
+                            ),
+                            
+                            progress_bar,
+                        ],
+                    ),
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                subtask_container_process, 
+                                subtask_container_test,
+                                subtask_container_completed 
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=10,
+                        ),
+                        padding=ft.padding.all(10),
+                        height=0,  # начальная высота контейнера
+                    ),
+                ],
+            ),
+            bgcolor="#f7f7f7",
+            border_radius=10,
+            padding=ft.padding.all(10)
+        )
+    else:
+        all_task_container = ft.Container(
+            content=ft.Column(
+                [
+                    ft.Row(
+                        [
+                            title_task,
+                        ],
+                    ),
+                    ft.Row(  # Добавляем обе кнопки в один Row
+                        [
+                            ft.TextButton(
+                                content=ft.Row(
+                                    [
+                                        ft.Text("Посмотреть все", color = ft.colors.GREEN),
+                                        ft.Icon(ft.icons.ARROW_DROP_DOWN, color = ft.colors.GREEN)
+                                    ],
+                                ),
+                                on_click=lambda e: open_task(all_task_container, e),
+                            ),
+                            ft.TextButton(
+                                content=ft.Row(
+                                    [
+                                        ft.Text("Посмотреть исполнителей"),
+                                        ft.Icon(ft.icons.PEOPLE)
+                                    ],
+                                ),
+                                on_click=lambda e: show_responsible_users_dialog(task_id, e),
+                            ),
+                            
+                            progress_bar,
+                        ],
+                    ),
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                subtask_container_process, 
+                                subtask_container_test,
+                                subtask_container_completed 
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=10,
+                        ),
+                        padding=ft.padding.all(10),
+                        height=0,  # начальная высота контейнера
+                    ),
+                ],
+            ),
+            bgcolor="#f7f7f7",
+            border_radius=10,
+            padding=ft.padding.all(10)
+        )
+    
+    all_task_container.in_all_task_list_process = in_all_task_list_process
+    all_task_container.in_all_task_list_test = in_all_task_list_test
+    all_task_container.in_all_task_list_completed = in_all_task_list_completed
     
     all_task_container.task_id = task_id
     all_task_container.is_open = False  # добавляем атрибут is_open
@@ -773,14 +831,15 @@ def create_panel_my_task(my_task_list, load_my_tasks):
     )
     return panel_my_tasks
 
-def create_panel_all_tasks(add_task, all_task_list): 
+def create_panel_all_tasks(add_task, all_task_list, is_admin): 
     panel_all_tasks = ft.Container(
         content=ft.Column(  
             [   
                 ft.Row(
                     [
                         ft.Text("Все задачи", style="headlineMedium"),
-                        ft.IconButton(ft.icons.ADD_TASK, icon_color=ft.colors.GREEN, tooltip="Добавить задачу", on_click=add_task)
+                        # Добавляем кнопку "Добавить задачу" только для администраторов
+                        ft.IconButton(ft.icons.ADD_TASK, icon_color=ft.colors.GREEN, tooltip="Добавить задачу", on_click=add_task) if is_admin else ft.Container()  # Условие для отображения кнопки
                     ],
                     spacing=10,
                 ),

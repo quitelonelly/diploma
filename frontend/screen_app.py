@@ -4,8 +4,9 @@ import time
 from threading import Timer
 
 from database.core import (
-    insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
-    get_user_id_by_login, get_responsible_users, delete_task, insert_subtask, update_subtask, update_subtask_status
+    get_subtasks, insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
+    get_user_id_by_login, get_responsible_users, delete_task, insert_subtask, update_subtask, update_subtask_status,
+    get_role_user
     )
 
 from frontend.layout import (
@@ -17,7 +18,12 @@ from frontend.layout import (
 
 def main_screen(page, login, password):
     
-    page.window_resizable = False
+    admin_role = get_role_user(login)
+    
+    if admin_role:
+        print("Вы вошли как администратор!")
+    else:
+        print("Вы вошли как пользователь!")
     
     # Фукнция подтвержления изменения задачи   
     def confirm_name_task(title_task, task_id, e):
@@ -124,7 +130,8 @@ def main_screen(page, login, password):
         title_task = "Новая задача"
         task_id = insert_task(title_task)
         task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, 
-                                               add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask)
+                                               add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask,
+                                               admin_role, show_responsible_users_dialog)
         all_task_list.controls.append(task_container)
         page.update()    
     
@@ -223,14 +230,18 @@ def main_screen(page, login, password):
     
     # Функция загружает все задачи
     def load_tasks():
-        tasks = get_tasks()
+        tasks = get_tasks()  # Получаем все задачи
+        subtasks = get_subtasks()  # Получаем все подзадачи
         
+     
         for task in tasks:
             if not any(container.task_id == task.id for container in all_task_list.controls):
                 task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, 
-                                                       add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask)
+                                                    add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask,
+                                                    admin_role, show_responsible_users_dialog)
                 all_task_list.controls.append(task_container)
-        page.update()
+
+        page.update()  # Обновляем страницу
 
     # Функция загружает мои задачи
     def load_my_tasks():
@@ -337,7 +348,7 @@ def main_screen(page, login, password):
     panel_my_tasks = create_panel_my_task(my_task_list, load_my_tasks)
     
     # Контейнер с "Все задачи"
-    panel_all_tasks = create_panel_all_tasks(add_task, all_task_list)
+    panel_all_tasks = create_panel_all_tasks(add_task, all_task_list, admin_role)
 
     
     # Контейнер с "Выполнено"

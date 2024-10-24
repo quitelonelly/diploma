@@ -130,6 +130,18 @@ def delete_task(task_id, task_container, all_task_list, page, dialog):
     # Удаляем задачу из списка 
     all_task_list.controls.remove(task_container)
     page.update()
+       
+def get_role_user(login):
+    with sync_engine.connect() as conn:
+        stmt = select(users_table).where(users_table.c.username == login)
+        result = conn.execute(stmt)
+        user = result.fetchone()
+        
+        if user.permissions == "ADMIN":
+            return True
+        else:
+            return False
+        
         
 # Функция получения всех пользователей из БД
 def get_users():
@@ -144,7 +156,14 @@ def get_tasks():
         stmt = select(tasks_table)
         result = conn.execute(stmt)
         return result.fetchall()
-        
+    
+# Функция для получения всех подзадач из БД
+def get_subtasks():
+    with sync_engine.connect() as conn:
+        stmt = select(subtask_table)
+        result = conn.execute(stmt)
+        return result.fetchall()
+
 # Функция ищет id пользователя по его логину
 def get_user_id_by_login(login):
     with sync_engine.connect() as conn:
