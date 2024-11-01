@@ -1,3 +1,4 @@
+# Импортируем необходимые библиотеки
 from database.models import metadata_obj, users_table, tasks_table, responsible_table, subtask_table
 from database.db import sync_engine
 from sqlalchemy import insert, select, update, delete
@@ -34,7 +35,7 @@ def insert_user(username, userpass):
         # Если пользователь не найден, добавляем новые данные
         stmt = insert(users_table).values(
             [
-                {"username": username, "userpass": userpass}
+                {"username": username, "userpass": userpass, "permissions": "USER"}
             ]
         )
         conn.execute(stmt)
@@ -130,7 +131,8 @@ def delete_task(task_id, task_container, all_task_list, page, dialog):
     # Удаляем задачу из списка 
     all_task_list.controls.remove(task_container)
     page.update()
-       
+
+# Функция возвращает True если пользователь администратор       
 def get_role_user(login):
     with sync_engine.connect() as conn:
         stmt = select(users_table).where(users_table.c.username == login)
@@ -141,7 +143,6 @@ def get_role_user(login):
             return True
         else:
             return False
-        
         
 # Функция получения всех пользователей из БД
 def get_users():

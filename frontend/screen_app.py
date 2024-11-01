@@ -1,3 +1,4 @@
+# Импортируем необходимые библиотеки
 import flet as ft
 import time
 
@@ -106,7 +107,8 @@ def main_screen(page, login, password):
         page.dialog = responsible_users_dialog
         responsible_users_dialog.open = True
         page.update()
-        
+
+    # Функция показывает диалоговое окно с удалением задачи    
     def show_confirm_delete_task_dialog(task_id, e, task_container, all_task_list, page):
         def close_dialog(dialog):
             dialog.open = False

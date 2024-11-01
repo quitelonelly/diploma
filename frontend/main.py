@@ -1,3 +1,4 @@
+# Импортируем необходимые библиотеки
 import flet as ft
 
 from database.core import create_tables, insert_user, check_user_pass
