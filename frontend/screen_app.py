@@ -158,19 +158,18 @@ def main_screen(page, login, password):
             value=False,
             on_change=lambda e: toggle_subtask(
                 subtask_input.value, e.control.value, in_all_task_list_process, in_all_task_list_test, 
-                in_all_task_list_completed, subtask_row, subtask_id  # Передаем текущую строку подзадачи
+                in_all_task_list_completed, subtask_row_admin, subtask_id  # Передаем текущую строку подзадачи
             )  # Обработчик изменения состояния
         )
 
         # Создаем строку, содержащую чекбокс и текстовое поле
-        subtask_row = ft.Row(
+        subtask_row_admin = ft.Row(
             controls=[
                 subtask_checkbox,
                 subtask_input
             ],
             alignment=ft.MainAxisAlignment.START
         )
-
         # Переменная для хранения таймера
         update_timer = None
 
@@ -189,7 +188,7 @@ def main_screen(page, login, password):
         subtask_input.on_change = on_change_subtask_name
 
         # Добавляем строку с чекбоксом в список подзадач
-        in_all_task_list_process.controls.append(subtask_row)
+        in_all_task_list_process.controls.append(subtask_row_admin)
         in_all_task_list_process.update()  # Обновляем список подзадач
         page.update()  # Обновляем страницу
 
@@ -197,8 +196,9 @@ def main_screen(page, login, password):
         subtask_input.value = ""
 
     # Обработчик для переключения состояния подзадачи
+    # Обработчик для переключения состояния подзадачи
     def toggle_subtask(name, is_checked, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, subtask_row, subtask_id):
-    # Проверяем, находится ли подзадача в списке "В процессе"
+        # Проверяем, находится ли подзадача в списке "В процессе"
         if subtask_row not in in_all_task_list_process.controls:
             print(f"Подзадача '{name}' отсутствует в списке 'В процессе'.")
             return  # Если подзадача не в списке, выходим из функции
@@ -207,16 +207,29 @@ def main_screen(page, login, password):
             print(f"Подзадача '{name}' выполнена!")
             # Удаляем подзадачу из списка "В процессе"
             in_all_task_list_process.controls.remove(subtask_row)
-            
+
             # Устанавливаем значение чекбокса в False, чтобы подзадача была неотмеченной
             subtask_row.controls[0].value = False  # Устанавливаем чекбокс в неотмеченное состояние
-            
-            # Добавляем подзадачу в список "На проверке"
-            in_all_task_list_test.controls.append(subtask_row)
+
+            # Создаем строку с текстом подзадачи для добавления в список "На проверке"
+            subtask_text_row = ft.Row(
+                controls=[
+                    ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.YELLOW),
+                    ft.Text(name, size=16, width=240, color=ft.colors.WHITE)
+                ],
+                alignment=ft.MainAxisAlignment.START,
+            )
+
+            if admin_role:
+                # Добавляем подзадачу в список "На проверке"
+                in_all_task_list_test.controls.append(subtask_row)
+            else:
+                in_all_task_list_test.controls.append(subtask_text_row)
+
             update_subtask_status(subtask_id)
         else:
             print(f"Подзадача '{name}' не выполнена!")
-            
+
             # Устанавливаем значение чекбокса в False, чтобы подзадача была неотмеченной
             subtask_row.controls[0].value = False  # Устанавливаем чекбокс в неотмеченное состояние
 
@@ -224,7 +237,6 @@ def main_screen(page, login, password):
         in_all_task_list_process.update()
         in_all_task_list_test.update()
         page.update()  # Обновляем страницу
-            
     # Функция для интервального вызова функции    
     def repeater(interval, function):
         Timer(interval, repeater, [interval, function]).start()
