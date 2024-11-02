@@ -196,15 +196,19 @@ def main_screen(page, login, password):
         subtask_input.value = ""
 
     # Обработчик для переключения состояния подзадачи
-    # Обработчик для переключения состояния подзадачи
     def toggle_subtask(name, is_checked, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, subtask_row, subtask_id):
+
         # Проверяем, находится ли подзадача в списке "В процессе"
         if subtask_row not in in_all_task_list_process.controls:
+
             print(f"Подзадача '{name}' отсутствует в списке 'В процессе'.")
+
             return  # Если подзадача не в списке, выходим из функции
 
         if is_checked:
+
             print(f"Подзадача '{name}' выполнена!")
+
             # Удаляем подзадачу из списка "В процессе"
             in_all_task_list_process.controls.remove(subtask_row)
 
@@ -220,13 +224,11 @@ def main_screen(page, login, password):
                 alignment=ft.MainAxisAlignment.START,
             )
 
-            if admin_role:
-                # Добавляем подзадачу в список "На проверке"
-                in_all_task_list_test.controls.append(subtask_row)
-            else:
-                in_all_task_list_test.controls.append(subtask_text_row)
-
+            # Добавляем подзадачу в список "На проверке"
+            in_all_task_list_test.controls.append(subtask_text_row)
+            
             update_subtask_status(subtask_id)
+
         else:
             print(f"Подзадача '{name}' не выполнена!")
 
@@ -237,25 +239,76 @@ def main_screen(page, login, password):
         in_all_task_list_process.update()
         in_all_task_list_test.update()
         page.update()  # Обновляем страницу
+
     # Функция для интервального вызова функции    
     def repeater(interval, function):
         Timer(interval, repeater, [interval, function]).start()
         function()
     
-    # Функция загружает все задачи
+    # Функция загружает все задачи и подзадачи в них
     def load_tasks():
+
         tasks = get_tasks()  # Получаем все задачи
         subtasks = get_subtasks()  # Получаем все подзадачи
-        
-     
+
         for task in tasks:
             if not any(container.task_id == task.id for container in all_task_list.controls):
-                task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, 
-                                                    add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask,
-                                                    admin_role, show_responsible_users_dialog)
+
+                task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask, admin_role, show_responsible_users_dialog)
+
+                # Находим подзадачи для текущей задачи
+                task_subtasks = [subtask for subtask in subtasks if subtask.id_task == task.id]
+
+                # Получаем контейнеры для списков подзадач
+                process_list = task_container.content.controls[2].content.controls[0].content.controls[1]
+                test_list = task_container.content.controls[2].content.controls[1].content.controls[1]
+                completed_list = task_container.content.controls[2].content.controls[2].content.controls[1]
+
+                # Добавляем подзадачи в соответствующие списки
+                for subtask in task_subtasks:
+                    subtask_input = ft.TextField(value=subtask.subtaskname, border_width=0, width=240, max_lines=5)
+
+                    if subtask.status == "В процессе":
+
+                        subtask_row_admin = ft.Row(controls=[], alignment=ft.MainAxisAlignment.START)
+
+                        # Используем аргументы по умолчанию для захвата значений
+                        subtask_checkbox = ft.Checkbox(
+                            value=False,
+                            on_change=lambda e, name=subtask.subtaskname, id=subtask.id, row=subtask_row_admin: toggle_subtask(
+                                name,
+                                e.control.value,
+                                process_list,
+                                test_list,
+                                completed_list,
+                                row,
+                                id
+                            )
+                        )
+
+                        subtask_row_admin.controls.append(subtask_checkbox)
+                        subtask_row_admin.controls.append(subtask_input)
+                        process_list.controls.append(subtask_row_admin)
+
+                    elif subtask.status == "На проверке":
+
+                        # Создаем строку без чекбокса
+                        subtask_text_row = ft.Row(
+                            controls=[
+                                ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.YELLOW),
+                                ft.Text(subtask.subtaskname, size=16, width=240, color=ft.colors.WHITE)
+                            ],
+                            alignment=ft.MainAxisAlignment.START,
+                        )
+
+                        test_list.controls.append(subtask_text_row)
+
+                    elif subtask.status == "Готово":
+                        completed_list.controls.append(subtask_row_admin)
+
                 all_task_list.controls.append(task_container)
 
-        page.update()  # Обновляем страницу
+        page.update()  # Обновляем страницу после загрузки задач
 
     # Функция загружает мои задачи
     def load_my_tasks():
