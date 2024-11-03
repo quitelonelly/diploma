@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, String, MetaData, BigInteger, ForeignKey
+from sqlalchemy import Table, Column, String, MetaData, BigInteger, ForeignKey, LargeBinary
 
 metadata_obj = MetaData()
 
@@ -18,6 +18,7 @@ tasks_table = Table(
     metadata_obj,
     Column("id", BigInteger, primary_key=True),
     Column("taskname", String),
+    Column("file", LargeBinary)
 )
 
 # Таблица с исполнителями задач

@@ -13,9 +13,9 @@ def main(page):
     page.title = "Pulse"
     page.theme_mode = "dark"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
-    page.window_width = 400
-    page.window_height = 450
-    page.window_resizable = False
+    page.window.width = 400
+    page.window.height = 450
+    page.window.resizable = False
     
     # Вызов функции создания таблиц БД
     create_tables()
@@ -41,9 +41,9 @@ def main(page):
 
         if result is None:
             
-            page.window_width = 1300
-            page.window_height = 750
-            page.window_resizable = False
+            page.window.width = 1300
+            page.window.height = 750
+            page.window.resizable = False
             
             page.clean()
             main_screen(page, user_login.value, user_pass.value) 
@@ -70,9 +70,9 @@ def main(page):
         
         if result == True:
             
-            page.window_width = 1300
-            page.window_height = 750
-            page.window_resizable = False
+            page.window.width = 1300
+            page.window.height = 750
+            page.window.resizable = False
             
             page.clean()
             main_screen(page, user_login.value, user_pass.value) 

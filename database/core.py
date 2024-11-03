@@ -23,6 +23,7 @@ class TaskORM(Model):
     
 # Функция создания таблиц
 def create_tables():
+    # metadata_obj.drop_all(sync_engine)
     metadata_obj.create_all(sync_engine)
     
 # Функция добавления пользователя в БД
@@ -90,6 +91,28 @@ def insert_subtask(subtask_name, task_id):
         
         conn.commit()
         return subtask_id
+    
+def insert_file(task_id, file_path):
+
+    # Открываем сессию
+    with sync_engine.connect() as conn:
+        try:
+            # Читаем файл в бинарном формате
+            with open(file_path, 'rb') as file:
+                file_data = file.read()  # Читаем файл в бинарном формате
+
+            # Обновляем запись задачи, добавляя файл
+            stmt = update(tasks_table).where(tasks_table.c.id == task_id).values(file=file_data)
+            conn.execute(stmt)
+            conn.commit()
+
+            print("Файл успешно загружен в задачу.")
+    
+        except Exception as e:
+            # Если произошла ошибка, откатываем транзакцию
+            conn.rollback()
+
+            print(f"Ошибка при загрузке файла: {e}")
 
 # Функция для обновления заголовка задачи    
 def update_task(task_id, new_title):

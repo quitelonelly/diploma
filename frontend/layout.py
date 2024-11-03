@@ -329,6 +329,30 @@ def create_confirm_delete_task_dialog(delete_task, task_id, task_container, all_
     )
     return confirm_delete_task_dialog
 
+def create_file_container(open_file):
+        # Создаем контейнер для текста с обработчиком нажатия
+        file_name_text = ft.Container(
+            content=ft.Text(
+                "Нет файла",
+                size=20,
+                weight=240,
+                color=ft.colors.GREY
+            ),
+            on_click=lambda e: open_file(file_name_text.content.value)  # Добавляем обработчик нажатия
+        )
+        
+        file_container = ft.Container(
+            content=ft.Row(
+                controls=[
+                    ft.Icon(ft.icons.FILE_PRESENT, color=ft.colors.GREY),
+                    file_name_text,  # Используем контейнер с текстом
+                ],
+                alignment=ft.MainAxisAlignment.START,
+            ),
+            padding=ft.padding.only(left=15, bottom=10),  # Устанавливаем паддинг
+        )
+        return file_container
+
 def create_my_task_container(task_id, task_name, confirm_name_task, open_task, show_responsible_users_dialog):
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=True, border_width=0, width=None, max_lines=2, expand=True)
     progress_bar = ft.ProgressBar(width=200, height=10, color=ft.colors.GREEN, value=0, bar_height=10, border_radius=10)
@@ -505,7 +529,8 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
     return my_task_container
 
 def create_task_container(task_id, task_name, confirm_name_task, open_task, add_people, 
-                          all_task_list, page, show_confirm_delete_task_dialog, add_subtask, is_admin, show_responsible_users_dialog):
+                          all_task_list, page, show_confirm_delete_task_dialog, add_subtask, 
+                          is_admin, show_responsible_users_dialog, add_file, open_file):
     
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
     title_task_user = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=True, border_width=0, width=None, max_lines=2, expand=True)
@@ -515,6 +540,9 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
     in_all_task_list_process = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     in_all_task_list_test = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     in_all_task_list_completed = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
+
+    # Создаем контейнер файла
+    file_container = create_file_container(lambda file_name: open_file(file_name))
     
     # Добавляем кнопку добавления подзадачи только для администраторов
     btn_add_subtask = ft.TextButton(
@@ -537,9 +565,9 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
             ],
         ),
         width=170,
-        on_click=lambda e: print("Загрузка файла..."), 
+        on_click=lambda e: add_file(file_container, task_id, e),  # Привязка к кнопке
     )
-    
+
     subtask_container_process = ft.Container(
         content=ft.Column(
             [
@@ -576,7 +604,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
         animate_opacity=900,  # добавляем анимацию прозрачности
         opacity=1,  # начальная прозрачность
     )
-    
+
     subtask_container_test = ft.Container(
         content=ft.Column(
             [
@@ -592,17 +620,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                     opacity=1,  # начальная прозрачность
                 ),
                 in_all_task_list_test,
-                
-                ft.Container(
-                    content=ft.Row(
-                        [
-                            ft.Icon(ft.icons.UPLOAD_FILE, color=ft.colors.GREY),  
-                            ft.Text("ФАЙЛ.rar", size=20, color=ft.colors.GREY),  
-                        ],
-                        alignment=ft.MainAxisAlignment.START,
-                    ),
-                    padding=ft.padding.only(bottom=15, left=20), 
-                ),
+                file_container,  # Используем file_container для отображения имени файла
             ],
             alignment=ft.MainAxisAlignment.START,
             spacing=10,
@@ -610,11 +628,12 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
         width=280,
         height=380,
         bgcolor="#111418",  # Измените цвет фона на светло-голубой
-        border=ft.border.all (1.5),
+        border=ft.border.all(1.5),
         border_radius=10,
         animate_opacity=900,  # добавляем анимацию прозрачности
         opacity=1,  # начальная прозрачность
     )
+
     
     subtask_container_completed = ft.Container(
         content=ft.Column(

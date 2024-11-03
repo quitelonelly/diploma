@@ -1,13 +1,15 @@
 # Импортируем необходимые библиотеки
 import flet as ft
 import time
+import os
+import subprocess
 
 from threading import Timer
 
 from database.core import (
     get_subtasks, insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
     get_user_id_by_login, get_responsible_users, delete_task, insert_subtask, update_subtask, update_subtask_status,
-    get_role_user
+    get_role_user, insert_file
     )
 
 from frontend.layout import (
@@ -15,17 +17,19 @@ from frontend.layout import (
     create_edit_btn, create_exit_btn, create_profile_dialog, create_task_container, create_header_container,
     create_nav_container, create_panel_my_task, create_panel_all_tasks, create_panel_done, create_screen_app,
     create_add_person_dialog, create_my_task_container, create_responsible_person_dialog, create_confirm_delete_task_dialog,
+
 )
 
 def main_screen(page, login, password):
     
+    page.window.resizable = False
     admin_role = get_role_user(login)
     
     if admin_role:
         print("Вы вошли как администратор!")
     else:
         print("Вы вошли как пользователь!")
-    
+
     # Фукнция подтвержления изменения задачи   
     def confirm_name_task(title_task, task_id, e):
         update_task(task_id, title_task.value)
@@ -124,6 +128,50 @@ def main_screen(page, login, password):
         page.dialog = confirm_delete_task_dialog
         confirm_delete_task_dialog.open = True
         page.update()
+
+    def open_file(file_name):
+        if os.path.exists(file_name):  # Проверяем, существует ли файл
+            if os.name == 'nt':  # Windows
+                os.startfile(file_name)
+            else:  # Unix (Linux, macOS)
+                subprocess.call(('open', file_name)) if os.uname().sysname == 'Darwin' else subprocess.call(('xdg-open', file_name))
+        else:
+            print("Файл не найден.")
+
+
+    def add_file(file_container, task_id, e):
+        print("Открываем файл...")
+
+        # Инициализация FilePicker
+        file_picker = ft.FilePicker(on_result=lambda e: pick_files_result(e, file_container, task_id))
+
+        # Добавляем FilePicker в overlay
+        page.overlay.append(file_picker)
+
+        # Обновляем страницу, чтобы убедиться, что FilePicker добавлен
+        page.update()
+
+        # Теперь, когда FilePicker добавлен, вызываем pick_files
+        file_picker.pick_files(allow_multiple=False)
+
+    def pick_files_result(e: ft.FilePickerResultEvent, file_container, task_id):
+        if e.files:
+            row = file_container.content  # Получаем доступ к Row
+            file_path = e.files[0].path  # Получаем полный путь к файлу
+            file_name = os.path.basename(file_path)  # Извлекаем только имя файла
+            row.controls[1].content.value = file_name  # Обновляем текстовое поле с именем файла
+            row.controls[1].on_click = lambda e: open_file(file_path)  # Добавляем обработчик для открытия файла
+
+            # Добавляем файл в базу данных
+            insert_file(task_id, file_path)
+
+            # Обновляем интерфейс, чтобы отобразить имя файла
+            file_container.update()  # Обновление контейнера файла
+
+        else:
+            row.controls[1].content.value = "Нет файла"
+
+        file_container.update()
         
     # Функция добавляет задачу в список        
     def add_task(e):
@@ -131,9 +179,10 @@ def main_screen(page, login, password):
         
         title_task = "Новая задача"
         task_id = insert_task(title_task)
+
         task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, 
                                                add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask,
-                                               admin_role, show_responsible_users_dialog)
+                                               admin_role, show_responsible_users_dialog, add_file, open_file)
         all_task_list.controls.append(task_container)
         page.update()    
     
@@ -200,21 +249,14 @@ def main_screen(page, login, password):
 
         # Проверяем, находится ли подзадача в списке "В процессе"
         if subtask_row not in in_all_task_list_process.controls:
-
             print(f"Подзадача '{name}' отсутствует в списке 'В процессе'.")
-
             return  # Если подзадача не в списке, выходим из функции
-
         if is_checked:
-
             print(f"Подзадача '{name}' выполнена!")
-
             # Удаляем подзадачу из списка "В процессе"
             in_all_task_list_process.controls.remove(subtask_row)
-
             # Устанавливаем значение чекбокса в False, чтобы подзадача была неотмеченной
             subtask_row.controls[0].value = False  # Устанавливаем чекбокс в неотмеченное состояние
-
             # Создаем строку с текстом подзадачи для добавления в список "На проверке"
             subtask_text_row = ft.Row(
                 controls=[
@@ -226,7 +268,6 @@ def main_screen(page, login, password):
 
             # Добавляем подзадачу в список "На проверке"
             in_all_task_list_test.controls.append(subtask_text_row)
-            
             update_subtask_status(subtask_id)
 
         else:
@@ -254,7 +295,9 @@ def main_screen(page, login, password):
         for task in tasks:
             if not any(container.task_id == task.id for container in all_task_list.controls):
 
-                task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask, admin_role, show_responsible_users_dialog)
+                task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people, all_task_list, page, 
+                                                       show_confirm_delete_task_dialog, add_subtask, admin_role, show_responsible_users_dialog, 
+                                                       add_file, open_file)
 
                 # Находим подзадачи для текущей задачи
                 task_subtasks = [subtask for subtask in subtasks if subtask.id_task == task.id]
