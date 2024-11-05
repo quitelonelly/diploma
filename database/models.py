@@ -18,7 +18,16 @@ tasks_table = Table(
     metadata_obj,
     Column("id", BigInteger, primary_key=True),
     Column("taskname", String),
-    Column("file", LargeBinary)
+)
+
+# Таблица с файлами
+files_table = Table(
+    "files",
+    metadata_obj,
+    Column("id", BigInteger, primary_key=True),
+    Column("id_task", BigInteger, ForeignKey("tasks.id")),
+    Column("file_name", String),
+    Column("file_data", LargeBinary)
 )
 
 # Таблица с исполнителями задач

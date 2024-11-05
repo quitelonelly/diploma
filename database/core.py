@@ -1,5 +1,5 @@
 # Импортируем необходимые библиотеки
-from database.models import metadata_obj, users_table, tasks_table, responsible_table, subtask_table
+from database.models import metadata_obj, users_table, tasks_table, responsible_table, subtask_table, files_table
 from database.db import sync_engine
 from sqlalchemy import insert, select, update, delete
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -92,27 +92,21 @@ def insert_subtask(subtask_name, task_id):
         conn.commit()
         return subtask_id
     
-def insert_file(task_id, file_path):
-
-    # Открываем сессию
+def insert_file(task_id, file_name, file_data):
     with sync_engine.connect() as conn:
-        try:
-            # Читаем файл в бинарном формате
-            with open(file_path, 'rb') as file:
-                file_data = file.read()  # Читаем файл в бинарном формате
+        stmt = insert(files_table).values(
+            id_task=task_id,
+            file_name=file_name,
+            file_data=file_data
+        )
+        conn.execute(stmt)
+        conn.commit()
 
-            # Обновляем запись задачи, добавляя файл
-            stmt = update(tasks_table).where(tasks_table.c.id == task_id).values(file=file_data)
-            conn.execute(stmt)
-            conn.commit()
-
-            print("Файл успешно загружен в задачу.")
-    
-        except Exception as e:
-            # Если произошла ошибка, откатываем транзакцию
-            conn.rollback()
-
-            print(f"Ошибка при загрузке файла: {e}")
+def get_files_by_task(task_id):
+    with sync_engine.connect() as conn:
+        stmt = select(files_table).where(files_table.c.id_task == task_id)
+        result = conn.execute(stmt).fetchall()
+        return result
 
 # Функция для обновления заголовка задачи    
 def update_task(task_id, new_title):

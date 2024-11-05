@@ -9,7 +9,7 @@ from threading import Timer
 from database.core import (
     get_subtasks, insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
     get_user_id_by_login, get_responsible_users, delete_task, insert_subtask, update_subtask, update_subtask_status,
-    get_role_user, insert_file
+    get_role_user, insert_file, get_files_by_task
     )
 
 from frontend.layout import (
@@ -17,7 +17,7 @@ from frontend.layout import (
     create_edit_btn, create_exit_btn, create_profile_dialog, create_task_container, create_header_container,
     create_nav_container, create_panel_my_task, create_panel_all_tasks, create_panel_done, create_screen_app,
     create_add_person_dialog, create_my_task_container, create_responsible_person_dialog, create_confirm_delete_task_dialog,
-
+    create_files_dialog
 )
 
 def main_screen(page, login, password):
@@ -60,6 +60,10 @@ def main_screen(page, login, password):
     # Функция добавляет пользователя в задачу
     def add_people(task_id, e):
         show_add_person_dialog(task_id, e)
+
+    # Функция показывает диалоговое окно с загруженными файлами
+    def get_files(task_id, e):
+        show_files_dialog(task_id, e)
         
     # Функция показывает диалоговое окно с профилем
     def show_profile_dialog(e):
@@ -93,6 +97,23 @@ def main_screen(page, login, password):
         add_person_dialog = create_add_person_dialog(get_users, close_icon, page, insert_person, task_id, get_associated_users, remove_user_from_task)
         page.dialog = add_person_dialog
         add_person_dialog.open = True
+        page.update()
+
+    # Функция показывает диалоговое окно c файлами
+    def show_files_dialog(task_id, e):
+        def close_dialog(dialog):
+            dialog.open = False
+            page.update()
+
+        close_icon = ft.IconButton(
+            icon=ft.icons.CLOSE,
+            icon_color=ft.colors.WHITE,
+            on_click=lambda _: close_dialog(files_dialog)
+        )
+
+        files_dialog = create_files_dialog(task_id, download_file, get_files_by_task, close_icon)
+        page.dialog = files_dialog
+        files_dialog.open = True
         page.update()
     
     # Функция показывает диалоговое окно с исполнителями задачи    
@@ -129,15 +150,25 @@ def main_screen(page, login, password):
         confirm_delete_task_dialog.open = True
         page.update()
 
-    def open_file(file_name):
-        if os.path.exists(file_name):  # Проверяем, существует ли файл
-            if os.name == 'nt':  # Windows
-                os.startfile(file_name)
-            else:  # Unix (Linux, macOS)
-                subprocess.call(('open', file_name)) if os.uname().sysname == 'Darwin' else subprocess.call(('xdg-open', file_name))
-        else:
-            print("Файл не найден.")
+    import platform
 
+    def download_file(file_data, file_name):
+
+        # Определяем путь к папке "Загрузки"
+        if platform.system() == "Windows":
+            # Для Windows
+            save_path = os.path.join(os.path.expanduser("~"), "Загрузки", file_name)
+        elif platform.system() == "Darwin":
+            # Для macOS
+            save_path = os.path.join(os.path.expanduser("~"), "Загрузки", file_name)
+        else:
+            # Для Linux и других Unix-подобных систем
+            save_path = os.path.join(os.path.expanduser("~"), "Загрузки", file_name)
+        # Записываем данные файла в файл
+        with open(save_path, 'wb') as f:
+            f.write(file_data)
+
+        print(f"Файл '{file_name}' успешно загружен в '{save_path}'")
 
     def add_file(file_container, task_id, e):
         print("Открываем файл...")
@@ -147,7 +178,6 @@ def main_screen(page, login, password):
 
         # Добавляем FilePicker в overlay
         page.overlay.append(file_picker)
-
         # Обновляем страницу, чтобы убедиться, что FilePicker добавлен
         page.update()
 
@@ -156,20 +186,18 @@ def main_screen(page, login, password):
 
     def pick_files_result(e: ft.FilePickerResultEvent, file_container, task_id):
         if e.files:
-            row = file_container.content  # Получаем доступ к Row
             file_path = e.files[0].path  # Получаем полный путь к файлу
             file_name = os.path.basename(file_path)  # Извлекаем только имя файла
-            row.controls[1].content.value = file_name  # Обновляем текстовое поле с именем файла
-            row.controls[1].on_click = lambda e: open_file(file_path)  # Добавляем обработчик для открытия файла
 
-            # Добавляем файл в базу данных
-            insert_file(task_id, file_path)
+            # Читаем файл в бинарном формате
+            with open(file_path, 'rb') as file:
+                file_data = file.read()  # Читаем файл в бинарном формате
+                insert_file(task_id, file_name, file_data)  # Сохраняем файл в базе данных
 
             # Обновляем интерфейс, чтобы отобразить имя файла
             file_container.update()  # Обновление контейнера файла
-
         else:
-            row.controls[1].content.value = "Нет файла"
+            print("Файл не выбран")
 
         file_container.update()
         
@@ -182,7 +210,7 @@ def main_screen(page, login, password):
 
         task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, 
                                                add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask,
-                                               admin_role, show_responsible_users_dialog, add_file, open_file)
+                                               admin_role, show_responsible_users_dialog, add_file, download_file, get_files)
         all_task_list.controls.append(task_container)
         page.update()    
     
@@ -297,7 +325,7 @@ def main_screen(page, login, password):
 
                 task_container = create_task_container(task.id, task.taskname, confirm_name_task, open_task, add_people, all_task_list, page, 
                                                        show_confirm_delete_task_dialog, add_subtask, admin_role, show_responsible_users_dialog, 
-                                                       add_file, open_file)
+                                                       add_file, download_file, get_files)
 
                 # Находим подзадачи для текущей задачи
                 task_subtasks = [subtask for subtask in subtasks if subtask.id_task == task.id]
@@ -362,9 +390,59 @@ def main_screen(page, login, password):
         for task in tasks:
             responsible_users = get_responsible_users(task.id)
             if user_id in responsible_users and not any(container.task_id == task.id for container in my_task_list.controls):
-                task_container = create_my_task_container(task.id, task.taskname, confirm_name_task, open_task, show_responsible_users_dialog)
+                task_container = create_my_task_container(task.id, task.taskname, confirm_name_task, open_task, 
+                                                          show_responsible_users_dialog, add_file, get_files)
+
+                # Получаем подзадачи для текущей задачи
+                subtasks = get_subtasks()  # Получаем все подзадачи
+                task_subtasks = [subtask for subtask in subtasks if subtask.id_task == task.id]
+
+                # Получаем контейнеры для списков подзадач
+                process_list = task_container.content.controls[2].content.controls[0].content.controls[1]
+                test_list = task_container.content.controls[2].content.controls[1].content.controls[1]
+                completed_list = task_container.content.controls[2].content.controls[2].content.controls[1]
+
+                # Добавляем подзадачи в соответствующие списки
+                for subtask in task_subtasks:
+                    subtask_input = ft.TextField(value=subtask.subtaskname, border_width=0, width=240, max_lines=5)
+
+                    if subtask.status == "В процессе":
+                        subtask_row_admin = ft.Row(controls=[], alignment=ft.MainAxisAlignment.START)
+
+                        subtask_checkbox = ft.Checkbox(
+                            value=False,
+                            on_change=lambda e, name=subtask.subtaskname, id=subtask.id, row=subtask_row_admin: toggle_subtask(
+                                name,
+                                e.control.value,
+                                process_list,
+                                test_list,
+                                completed_list,
+                                row,
+                                id
+                            )
+                        )
+
+                        subtask_row_admin.controls.append(subtask_checkbox)
+                        subtask_row_admin.controls.append(subtask_input)
+                        process_list.controls.append(subtask_row_admin)
+
+                    elif subtask.status == "На проверке":
+                        subtask_text_row = ft.Row(
+                            controls=[
+                                ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.YELLOW),
+                                ft.Text(subtask.subtaskname, size=16, width=240, color=ft.colors.WHITE)
+                            ],
+                            alignment=ft.MainAxisAlignment.START,
+                        )
+
+                        test_list.controls.append(subtask_text_row)
+
+                    elif subtask.status == "Готово":
+                        completed_list.controls.append(subtask_row_admin)
+
                 my_task_list.controls.append(task_container)
-        page.update()
+
+        page.update()  # Обновляем страницу после загрузки задач
     
     # Интервальный вызов функций обновления списков задач
     repeater(300, load_my_tasks)
