@@ -13,7 +13,7 @@ def main(page):
     page.title = "Pulse"
     page.theme_mode = "dark"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
-    page.window.width = 400
+    page.window.width = 450
     page.window.height = 450
     page.window.resizable = False
     

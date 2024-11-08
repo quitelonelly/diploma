@@ -99,14 +99,23 @@ def insert_file(task_id, file_name, file_data):
             file_name=file_name,
             file_data=file_data
         )
-        conn.execute(stmt)
+        result = conn.execute(stmt)
+        file_id = result.scalar()
+
         conn.commit()
+        return file_id
 
 def get_files_by_task(task_id):
     with sync_engine.connect() as conn:
         stmt = select(files_table).where(files_table.c.id_task == task_id)
         result = conn.execute(stmt).fetchall()
         return result
+    
+def delete_file(file_id):
+    with sync_engine.connect() as conn:
+        stmt = delete(files_table).where(files_table.c.id == file_id)
+        conn.execute(stmt)
+        conn.commit()
 
 # Функция для обновления заголовка задачи    
 def update_task(task_id, new_title):
@@ -123,9 +132,9 @@ def update_subtask(subtask_id, new_title):
         conn.commit()
 
 # Функция обновления статуса подзадачи       
-def update_subtask_status(subtask_id):
+def update_subtask_status(subtask_id, new_status):
     with sync_engine.connect() as conn:
-        stmt = update(subtask_table).where(subtask_table.c.id == subtask_id).values(status="На проверке")
+        stmt = update(subtask_table).where(subtask_table.c.id == subtask_id).values(status=new_status)
         conn.execute(stmt)
         conn.commit()
 

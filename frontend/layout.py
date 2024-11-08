@@ -347,18 +347,8 @@ def create_file_container(task_id, get_files):
 
     return file_container
 
-def create_files_dialog(task_id, download_file, get_files_by_task, close_icon):
+def create_files_dialog(task_id, download_file, get_files_by_task, close_icon, delete_file, page):
     files_list = ft.ListView(spacing=15, padding=ft.padding.all(10), expand=True)
-
-    # Получаем файлы из базы данных
-    files = get_files_by_task(task_id)
-    
-    for file in files:
-        files_list.controls.append(ft.ListTile(
-            title=ft.Text(file.file_name),
-            leading=ft.Icon(ft.icons.FILE_PRESENT),
-            on_click=lambda e, file_data=file.file_data, file_name=file.file_name: download_file(file_data, file_name)  # Добавляем обработчик нажатия
-        ))
 
     files_dialog = ft.AlertDialog(
         modal=False,
@@ -376,8 +366,35 @@ def create_files_dialog(task_id, download_file, get_files_by_task, close_icon):
             height=400,
         )
     )
-    
+
+    # Функция для обновления списка файлов
+    def update_file_list():
+        files_list.controls.clear()  # Очищаем текущий список
+        files = get_files_by_task(task_id)  # Получаем обновленный список файлов
+        for file in files:
+            files_list.controls.append(ft.ListTile(
+                title=ft.Text(file.file_name),
+                leading=ft.Icon(ft.icons.FILE_PRESENT),
+                trailing=ft.IconButton(
+                    icon=ft.icons.DELETE,
+                    icon_color=ft.colors.RED,
+                    tooltip="Удалить файл",
+                    on_click=lambda e, file_id=file.id: delete_and_update(file.id)
+                ),
+                on_click=lambda e, file_data=file.file_data, file_name=file.file_name: download_file(file_data, file_name)
+            ))
+        page.update()  # Обновляем ListView после добавления новых элементов
+
+    # Функция для удаления файла и обновления списка
+    def delete_and_update(file_id):
+        delete_file(file_id)  # Удаляем файл из базы данных
+        update_file_list()  # Обновляем список файлов в интерфейсе
+
+    # Обновляем список файлов после открытия диалога
+    update_file_list()
+
     return files_dialog
+
 
 def create_my_task_container(task_id, task_name, confirm_name_task, open_task, show_responsible_users_dialog, add_file,
                              get_files):
@@ -549,7 +566,7 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
 
 def create_task_container(task_id, task_name, confirm_name_task, open_task, add_people, 
                           all_task_list, page, show_confirm_delete_task_dialog, add_subtask, 
-                          is_admin, show_responsible_users_dialog, add_file, open_file, get_files):
+                          is_admin, show_responsible_users_dialog, add_file, get_files):
     
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
     title_task_user = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=True, border_width=0, width=None, max_lines=2, expand=True)
@@ -572,7 +589,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
             ],
         ),
         width=190,
-        on_click=lambda e: add_subtask(task_id, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, e),
+        on_click=lambda e: add_subtask(task_id, None, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, e),
     ) if is_admin else None  # Условие для отображения кнопки
 
     # Создаем кнопку загрузки файла
