@@ -379,7 +379,7 @@ def create_files_dialog(task_id, download_file, get_files_by_task, close_icon, d
                     icon=ft.icons.DELETE,
                     icon_color=ft.colors.RED,
                     tooltip="Удалить файл",
-                    on_click=lambda e, file_id=file.id: delete_and_update(file.id)
+                    on_click=lambda e, file_id=file.id: delete_and_update(file_id)  # Передаем правильный file_id
                 ),
                 on_click=lambda e, file_data=file.file_data, file_name=file.file_name: download_file(file_data, file_name)
             ))
@@ -561,6 +561,11 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
         padding=ft.padding.all(10)
     )
     my_task_container.task_id = task_id
+
+    my_task_container.in_all_task_list_process = in_all_task_list_process
+    my_task_container.in_all_task_list_test = in_all_task_list_test
+    my_task_container.in_all_task_list_completed = in_all_task_list_completed
+
     my_task_container.is_open = False  # добавляем атрибут is_open
     return my_task_container
 

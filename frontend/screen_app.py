@@ -212,7 +212,7 @@ def main_screen(page, login, password):
 
         task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, 
                                                add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask,
-                                               admin_role, show_responsible_users_dialog, add_file, download_file, get_files)
+                                               admin_role, show_responsible_users_dialog, add_file, get_files)
         all_task_list.controls.append(task_container)
         page.update()    
 
@@ -311,98 +311,60 @@ def main_screen(page, login, password):
     
     
     def load_tasks():
+        all_task_list.controls.clear()
 
         tasks = get_tasks()  # Получаем все задачи
-
         subtasks = get_subtasks()  # Получаем все подзадачи
-
 
         for task in tasks:
 
             if not any(container.task_id == task.id for container in all_task_list.controls):
-
                 task_container = create_task_container(
-
                     task.id, task.taskname, confirm_name_task, open_task,
-
                     add_people, all_task_list, page, show_confirm_delete_task_dialog,
-
                     add_subtask, admin_role, show_responsible_users_dialog,
-
                     add_file, get_files
-
                 )
 
-
                 # Находим подзадачи для текущей задачи
-
                 task_subtasks = [subtask for subtask in subtasks if subtask.id_task == task.id]
 
-
                 process_list = task_container.in_all_task_list_process
-
                 test_list = task_container.in_all_task_list_test
-
                 completed_list = task_container.in_all_task_list_completed
 
-
                 # Добавляем подзадачи в соответствующие списки
-
                 for subtask in task_subtasks:
-
                     if subtask.status == "В процессе":
-
                         subtask_row = create_subtask_container(subtask.id, subtask.subtaskname, process_list, test_list, completed_list)
-
                         process_list.controls.append(subtask_row)
-
                     elif subtask.status == "На проверке":
-
                         # Создаем строку для подзадачи и добавляем в тестовый список
-
                         subtask_text_row = ft.Row(
-
                             controls=[
-
                                 ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.YELLOW),
-
                                 ft.Text(subtask.subtaskname, size=16, width=240, color=ft.colors.WHITE)
-
                             ],
-
                             alignment=ft.MainAxisAlignment.START,
-
                         )
-
                         test_list.controls.append(subtask_text_row)
-
                     elif subtask.status == "Готово":
-
                         # Создаем строку для подзадачи и добавляем в список завершенных
-
                         subtask_compl_row = ft.Row(
-
                             controls=[
-
                                 ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.GREEN),
-
                                 ft.Text(subtask.subtaskname, size=16, width=240, color=ft.colors.WHITE)
-
                             ],
-
                             alignment=ft.MainAxisAlignment.START,
-
                         )
-
                         completed_list.controls.append(subtask_compl_row)
 
-
                 all_task_list.controls.append(task_container)
-
         page.update()  # Обновляем страницу после загрузки задач
 
     def load_my_tasks():
         my_task_list.controls.clear()
+
         user_id = get_user_id_by_login(login)
 
         tasks = get_tasks()
@@ -419,11 +381,44 @@ def main_screen(page, login, password):
                     show_responsible_users_dialog, 
                     add_file, 
                     get_files
-                    )
+                )
+
+                # Находим подзадачи для текущей задачи
+                task_subtasks = [subtask for subtask in subtasks if subtask.id_task == task.id]
+
+                process_list = task_container.in_all_task_list_process
+                test_list = task_container.in_all_task_list_test
+                completed_list = task_container.in_all_task_list_completed
+
+                # Добавляем подзадачи в соответствующие списки
+                for subtask in task_subtasks:
+                    if subtask.status == "В процессе":
+                        subtask_row = create_subtask_container(subtask.id, subtask.subtaskname, process_list, test_list, completed_list)
+                        process_list.controls.append(subtask_row)
+                    elif subtask.status == "На проверке":
+                        # Создаем строку для подзадачи и добавляем в тестовый список
+                        subtask_text_row = ft.Row(
+                            controls=[
+                                ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.YELLOW),
+                                ft.Text(subtask.subtaskname, size=16, width=240, color=ft.colors.WHITE)
+                            ],
+                            alignment=ft.MainAxisAlignment.START,
+                        )
+                        test_list.controls.append(subtask_text_row)
+                    elif subtask.status == "Готово":
+                        # Создаем строку для подзадачи и добавляем в список завершенных
+                        subtask_compl_row = ft.Row(
+                            controls=[
+                                ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.GREEN),
+                                ft.Text(subtask.subtaskname, size=16, width=240, color=ft.colors.WHITE)
+                            ],
+                            alignment=ft.MainAxisAlignment.START,
+                        )
+                        completed_list.controls.append(subtask_compl_row)
 
                 my_task_list.controls.append(task_container)
 
-        page.update()  # Обновляем страницу аницу после загрузки задач
+        page.update()  # Обновляем страницу после загрузки задач
 
     def toggle_subtask(name, is_checked, process_list, test_list, completed_list, subtask_row, subtask_id, e):
         print("Текущий список 'В процессе':", [row.controls[1].value for row in process_list.controls if isinstance(row, ft.Row)])
