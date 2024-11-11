@@ -336,6 +336,7 @@ def create_file_container(task_id, get_files):
                 ft.Text("Загруженные файлы"),
                 ft.Icon(ft.icons.FOLDER)
             ],
+            width=175,
         ),
         on_click=lambda e: get_files(task_id, e),
     )
@@ -414,7 +415,7 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
                 ft.Icon(ft.icons.UPLOAD_FILE)
             ],
         ),
-        width=170,
+        width=175,
         on_click=lambda e: add_file(file_container, task_id, e), 
     )
     
@@ -567,6 +568,7 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
     my_task_container.in_all_task_list_completed = in_all_task_list_completed
 
     my_task_container.is_open = False  # добавляем атрибут is_open
+    
     return my_task_container
 
 def create_task_container(task_id, task_name, confirm_name_task, open_task, add_people, 
@@ -605,7 +607,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                 ft.Icon(ft.icons.UPLOAD_FILE)
             ],
         ),
-        width=170,
+        width=175,
         on_click=lambda e: add_file(file_container, task_id, e),  # Привязка к кнопке
     )
 
@@ -828,6 +830,160 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
     all_task_container.task_id = task_id
     all_task_container.is_open = False  # добавляем атрибут is_open
     return all_task_container
+
+def create_completed_task_container(task_id, task_name, open_task, completed_task_list, 
+                                    page, show_responsible_users_dialog, get_files):
+
+    title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
+    
+    progress_bar = ft.ProgressBar(width=200, height=10, color=ft.colors.GREEN, value=0, bar_height=10, border_radius=10)
+
+    in_comp_task_list_completed = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
+
+    # Создаем контейнер файла
+    file_container = create_file_container(task_id, get_files)
+
+    subtask_container_process = ft.Container(
+        content=ft.Column(
+            [
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Text("В ПРОЦЕССЕ", size=22, color=ft.colors.WHITE)
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
+                    border=ft.border.only(bottom=ft.border.BorderSide(1.5)),
+                    animate_opacity=900,  # добавляем анимацию прозрачности
+                    opacity=1,  # начальная прозрачность
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.START,
+            spacing=10,
+        ),
+        width=280,
+        height=380,
+        bgcolor="#111418",  # Измените цвет фона на светло-голубой
+        border=ft.border.all(1.5),
+        border_radius=10,
+        animate_opacity=900,  # добавляем анимацию прозрачности
+        opacity=1,  # начальная прозрачность
+    )
+
+    subtask_container_test = ft.Container(
+        content=ft.Column(
+            [
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Text("НА ПРОВЕРКЕ", size=22, color=ft.colors.WHITE)
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
+                    border=ft.border.only(bottom=ft.border.BorderSide(1.5)),
+                    animate_opacity=900,  # добавляем анимацию прозрачности
+                    opacity=1,  # начальная прозрачность
+                ),
+                file_container,  # Используем file_container для отображения файлов
+            ],
+            alignment=ft.MainAxisAlignment.START,
+            spacing=10,
+        ),
+        width=280,
+        height=380,
+        bgcolor="#111418",  # Измените цвет фона на светло-голубой
+        border=ft.border.all(1.5),
+        border_radius=10,
+        animate_opacity=900,  # добавляем анимацию прозрачности
+        opacity=1,  # начальная прозрачность
+    )
+
+    
+    subtask_container_completed = ft.Container(
+        content=ft.Column(
+            [
+                ft.Container(
+                    content=ft.Row (
+                        [
+                            ft.Text("ГОТОВО", size=22, color=ft.colors.WHITE)
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
+                    border=ft.border.only(bottom=ft.border.BorderSide(1.5)),
+                    animate_opacity=900,  # добавляем анимацию прозрачности
+                    opacity=1,  # начальная прозрачность
+                ),
+                in_comp_task_list_completed,
+            ],
+            spacing=10,
+        ),
+        width=280,
+        height=380,
+        bgcolor="#111418",  # Измените цвет фона на светло-голубой
+        border=ft.border.all(1.5),
+        border_radius=10,
+        animate_opacity=900,  # добавляем анимацию прозрачности
+        opacity=1,  # начальная прозрачность
+    )
+    
+    comp_task_container = ft.Container(
+        content=ft.Column(
+            [
+                ft.Row(
+                    [
+                        title_task,   
+                    ],
+                ),
+                ft.Row(  # Добавляем обе кнопки в один Row
+                    [
+                        ft.TextButton(
+                            content=ft.Row(
+                                [
+                                    ft.Text("Посмотреть все", color = ft.colors.GREEN),
+                                    ft.Icon(ft.icons.ARROW_DROP_DOWN, color = ft.colors.GREEN)
+                                ],
+                            ),
+                            on_click=lambda e: open_task(comp_task_container, e),
+                        ),      
+
+                        ft.TextButton(
+                                content=ft.Row(
+                                    [
+                                        ft.Text("Посмотреть исполнителей"),
+                                        ft.Icon(ft.icons.PEOPLE)
+                                    ],
+                                ),
+                                on_click=lambda e: show_responsible_users_dialog(task_id, e),
+                            ),      
+                        progress_bar,
+                    ],
+                ),
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            subtask_container_process, 
+                            subtask_container_test,
+                            subtask_container_completed 
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        spacing=10,
+                    ),
+                    padding=ft.padding.all(10),
+                    height=0,  # начальная высота контейнера
+                ),
+            ],
+        ),
+        bgcolor="#f7f7f7",
+        border_radius=10,
+        padding=ft.padding.all(10)
+    )
+
+    comp_task_container.in_all_task_list_completed = in_comp_task_list_completed
+    
+    comp_task_container.task_id = task_id
+    comp_task_container.is_open = False  # добавляем атрибут is_open
+
+    return comp_task_container
 
 def create_header_container(title_app, profile_button):
     header_container = ft.Container(
