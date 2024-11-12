@@ -396,6 +396,18 @@ def create_files_dialog(task_id, download_file, get_files_by_task, close_icon, d
 
     return files_dialog
 
+def create_progress_bar():
+    progress_bar = ft.ProgressBar(
+        width=200, 
+        height=10, 
+        color=ft.colors.GREEN, 
+        value=0, 
+        bar_height=10, 
+        border_radius=10
+        )
+
+    return progress_bar
+
 def create_my_task_container(task_id, task_name, confirm_name_task, open_task, show_responsible_users_dialog, add_file,
                              get_files):
     
@@ -405,6 +417,8 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
     in_all_task_list_test = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     in_all_task_list_completed = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     
+    progress_bar = create_progress_bar()
+
     file_container = create_file_container(task_id, get_files)
     # Создаем кнопку загрузки файла
     btn_upload_file = ft.TextButton(
@@ -538,6 +552,8 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
                             ),
                             on_click=lambda e: show_responsible_users_dialog(task_id, e),
                         ),
+
+                        progress_bar,
                     ],
                 ),
                 ft.Container(
@@ -578,6 +594,8 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
     in_all_task_list_process = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     in_all_task_list_test = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     in_all_task_list_completed = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
+
+    progress_bar = create_progress_bar()
 
     # Создаем контейнер файла
     file_container = create_file_container(task_id, get_files)
@@ -742,6 +760,8 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                                 ),
                                 on_click=lambda e: show_confirm_delete_task_dialog(task_id, e, all_task_container, all_task_list, page),
                             ),
+
+                            progress_bar
                         ],
                     ),
                     ft.Container(

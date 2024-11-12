@@ -91,7 +91,8 @@ def insert_subtask(subtask_name, task_id):
         
         conn.commit()
         return subtask_id
-    
+
+# Функция для записи файла в БД    
 def insert_file(task_id, file_name, file_data):
     with sync_engine.connect() as conn:
         stmt = insert(files_table).values(
@@ -234,4 +235,9 @@ def get_responsible_users(task_id):
         result = conn.execute(stmt)
         return [row[0] for row in result]
         
-        
+# Функция считает колличество подзадач 
+def get_str_subtasks(task_id):
+    with sync_engine.connect() as conn: 
+        stmt = select(subtask_table.c.id).where(subtask_table.c.id_task == task_id)
+        result = conn.execute(stmt)
+        return result 
