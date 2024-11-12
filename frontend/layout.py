@@ -408,7 +408,7 @@ def create_progress_bar():
 
     return progress_bar
 
-def create_my_task_container(task_id, task_name, confirm_name_task, open_task, show_responsible_users_dialog, add_file,
+def create_my_task_container(task_id, task_name, open_task, show_responsible_users_dialog, add_file,
                              get_files, progress_bar):
     
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=True, border_width=0, width=None, max_lines=2, expand=True)
@@ -577,6 +577,7 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
     my_task_container.in_all_task_list_process = in_all_task_list_process
     my_task_container.in_all_task_list_test = in_all_task_list_test
     my_task_container.in_all_task_list_completed = in_all_task_list_completed
+    my_task_container.progress_bar = progress_bar
 
     my_task_container.is_open = False  # добавляем атрибут is_open
     
@@ -605,7 +606,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
             ],
         ),
         width=190,
-        on_click=lambda e: add_subtask(task_id, None, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, e),
+        on_click=lambda e: add_subtask(task_id, None, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, progress_bar, e),
     ) if is_admin else None  # Условие для отображения кнопки
 
     # Создаем кнопку загрузки файла
@@ -808,6 +809,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                                 ),
                                 on_click=lambda e: show_responsible_users_dialog(task_id, e),
                             ),
+                            progress_bar,
                         ],
                     ),
                     ft.Container(
@@ -833,6 +835,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
     all_task_container.in_all_task_list_process = in_all_task_list_process
     all_task_container.in_all_task_list_test = in_all_task_list_test
     all_task_container.in_all_task_list_completed = in_all_task_list_completed
+    all_task_container.progress_bar = progress_bar
     
     all_task_container.task_id = task_id
     all_task_container.is_open = False  # добавляем атрибут is_open

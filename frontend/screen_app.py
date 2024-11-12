@@ -212,15 +212,16 @@ def main_screen(page, login, password):
         title_task = "Новая задача"
         task_id = insert_task(title_task)
 
+        progress_bar = create_progress_bar()
+
         task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, 
                                                add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask,
-                                               admin_role, show_responsible_users_dialog, add_file, get_files)
+                                               admin_role, show_responsible_users_dialog, add_file, get_files, progress_bar)
         all_task_list.controls.append(task_container)
         page.update()    
 
     # Функция для создания контейнера подзадачи
-
-    def create_subtask_container(subtask_id, subtask_name, process_list, test_list, completed_list):
+    def create_subtask_container(subtask_id, task_id, subtask_name, process_list, test_list, completed_list, progress_bar):
 
         # Создаем текстовое поле для имени подзадачи
         subtask_input = ft.TextField(
@@ -237,7 +238,7 @@ def main_screen(page, login, password):
             value=False,
             on_change=lambda e: toggle_subtask(
                 subtask_input.value, e.control.value, process_list, test_list,
-                completed_list, subtask_row, subtask_id, e
+                completed_list, subtask_row, subtask_id, task_id, e
             )
         )
 
@@ -259,7 +260,7 @@ def main_screen(page, login, password):
         return subtask_row
     
     # Функция добавляет подзадачу в список 
-    def add_subtask(task_id, name, process_list, test_list, completed_list, e):
+    def add_subtask(task_id, name, process_list, test_list, completed_list, progress_bar, e):
 
         print("Добавлена подзадача")
 
@@ -276,12 +277,14 @@ def main_screen(page, login, password):
             max_lines=5
         )
 
+
+# name, is_checked, process_list, test_list, completed_list, subtask_row, subtask_id, task_id, e
         # Создаем чекбокс для подзадачи
         subtask_checkbox = ft.Checkbox(
             value=False,
             on_change=lambda e: toggle_subtask(
                 subtask_input.value, e.control.value, process_list, test_list, 
-                completed_list, subtask_row, subtask_id, e
+                completed_list, subtask_row, subtask_id, task_id, e
             )
         )
 
@@ -327,8 +330,7 @@ def main_screen(page, login, password):
 
                 task_container = create_my_task_container(
                     task.id, 
-                    task.taskname, 
-                    confirm_name_task, 
+                    task.taskname,  
                     open_task, 
                     show_responsible_users_dialog, 
                     add_file, 
@@ -359,11 +361,11 @@ def main_screen(page, login, password):
                 # Добавляем подзадачи в соответствующие списки
                 for subtask in task_subtasks:
                     if subtask.status == "В процессе":
-                        subtask_row = create_subtask_container(subtask.id, subtask.subtaskname, process_list, test_list, completed_list)
+                        subtask_row = create_subtask_container(subtask.id, task.id, subtask.subtaskname, process_list, test_list, completed_list, progress_bar)
                         process_list.controls.append(subtask_row)
                     elif subtask.status == "На проверке":
                         if admin_role:
-                            subtask_row = create_subtask_container(subtask.id, subtask.subtaskname, process_list, test_list, completed_list)
+                            subtask_row = create_subtask_container(subtask.id, task.id, subtask.subtaskname, process_list, test_list, completed_list, progress_bar)
                             test_list.controls.append(subtask_row)
                         else:
                             subtask_text_row = ft.Row(
@@ -429,14 +431,14 @@ def main_screen(page, login, password):
                 # Добавляем подзадачи в соответствующие списки
                 for subtask in task_subtasks:
                     if subtask.status == "В процессе":
-                        subtask_row = create_subtask_container(subtask.id, subtask.subtaskname, process_list, test_list, completed_list)
+                        subtask_row = create_subtask_container(subtask.id, task.id, subtask.subtaskname, process_list, test_list, completed_list, progress_bar)
                         process_list.controls.append(subtask_row)
                     elif subtask.status == "На проверке":
                         
                         # Проверяем является ли пользователь администратором
                         # Если да, то создаем чекбокс
                         if admin_role:
-                            subtask_row = create_subtask_container(subtask.id, subtask.subtaskname, process_list, test_list, completed_list)
+                            subtask_row = create_subtask_container(subtask.id, task.id, subtask.subtaskname, process_list, test_list, completed_list, progress_bar)
                             test_list.controls.append(subtask_row)
                         # Если нет, то создаем строку с текстом
                         else:
@@ -465,7 +467,7 @@ def main_screen(page, login, password):
     def load_comp_tasks():
         return
 
-    def toggle_subtask(name, is_checked, process_list, test_list, completed_list, subtask_row, subtask_id, e):
+    def toggle_subtask(name, is_checked, process_list, test_list, completed_list, subtask_row, subtask_id, task_id, e):
         print("Текущий список 'В процессе':", [row.controls[1].value for row in process_list.controls if isinstance(row, ft.Row)])
         print("Текущий список 'На проверке':", [row.controls[1].value for row in test_list.controls if isinstance(row, ft.Row)])
         print("Текущий список 'Готово':", [row.controls[1].value for row in completed_list.controls if isinstance(row, ft.Row)])
@@ -491,7 +493,7 @@ def main_screen(page, login, password):
                         value=False,
                         on_change=lambda e: toggle_subtask(
                             subtask_input.value, e.control.value, process_list, test_list, 
-                            completed_list, subtask_row, subtask_id, e
+                            completed_list, subtask_row, subtask_id, task_id, e
                         )
                     )
 
@@ -517,12 +519,12 @@ def main_screen(page, login, password):
                     )
                     test_list.controls.append(subtask_text_row)
                     update_subtask_status(subtask_id, "На проверке")
-
                     print("Подзадача добавлена в список 'На проверке'.")
 
         # Проверяем, находится ли подзадача в списке "На проверке"
         elif subtask_row in test_list.controls:
             if is_checked:
+
                 print(f"Подзадача '{name}' выполнена!")
                 # Удаляем подзадачу из списка "На проверке"
                 test_list.controls.remove(subtask_row)
@@ -533,12 +535,10 @@ def main_screen(page, login, password):
                         ft.Text(name, size=16, width=240, color=ft.colors.WHITE)
                     ],
                     alignment=ft.MainAxisAlignment.START,
-
                 )
                 # Добавляем подзадачу в список "Готово"
                 completed_list.controls.append(subtask_text_completed_row)
                 update_subtask_status(subtask_id, "Готово")
-
                 print("Подзадача добавлена в список 'Готово'.")
 
         else:
@@ -551,7 +551,30 @@ def main_screen(page, login, password):
         process_list.update()
         test_list.update()
         completed_list.update()
+
+        # Обновляем прогресс-бар
+        update_progress_bar(task_id, process_list, test_list, completed_list)
+
         page.update()  # Обновляем страницу после изменений
+
+    def update_progress_bar(task_id, process_list, test_list, completed_list):
+        total_subtasks = len(process_list.controls) + len(test_list.controls) + len(completed_list.controls)
+        completed_count = len(completed_list.controls)
+
+        # Обновление значения прогресс-бара
+        if total_subtasks > 0:
+            progress_value = completed_count / total_subtasks
+        else:
+            progress_value = 0
+
+        # Обновляем прогресс-бар для текущей задачи
+        for task_container in all_task_list.controls:
+            if task_container.task_id == task_id:  # Найти соответствующий контейнер задачи
+                task_container.progress_bar.value = progress_value  # Обновляем значение прогресс-бара
+                break
+
+        # Обновляем интерфейс прогресс-бара
+        page.update()
     
     # Интервальный вызов функций обновления списков задач
     repeater(300, load_my_tasks)
