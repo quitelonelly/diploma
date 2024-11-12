@@ -409,15 +409,13 @@ def create_progress_bar():
     return progress_bar
 
 def create_my_task_container(task_id, task_name, confirm_name_task, open_task, show_responsible_users_dialog, add_file,
-                             get_files):
+                             get_files, progress_bar):
     
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=True, border_width=0, width=None, max_lines=2, expand=True)
     
     in_all_task_list_process = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     in_all_task_list_test = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     in_all_task_list_completed = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
-    
-    progress_bar = create_progress_bar()
 
     file_container = create_file_container(task_id, get_files)
     # Создаем кнопку загрузки файла
@@ -586,7 +584,7 @@ def create_my_task_container(task_id, task_name, confirm_name_task, open_task, s
 
 def create_task_container(task_id, task_name, confirm_name_task, open_task, add_people, 
                           all_task_list, page, show_confirm_delete_task_dialog, add_subtask, 
-                          is_admin, show_responsible_users_dialog, add_file, get_files):
+                          is_admin, show_responsible_users_dialog, add_file, get_files, progress_bar):
 
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
     title_task_user = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=True, border_width=0, width=None, max_lines=2, expand=True)
@@ -594,8 +592,6 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
     in_all_task_list_process = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     in_all_task_list_test = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
     in_all_task_list_completed = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
-
-    progress_bar = create_progress_bar()
 
     # Создаем контейнер файла
     file_container = create_file_container(task_id, get_files)

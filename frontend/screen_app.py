@@ -19,7 +19,7 @@ from frontend.layout import (
     create_edit_btn, create_exit_btn, create_profile_dialog, create_task_container, create_header_container,
     create_nav_container, create_panel_my_task, create_panel_all_tasks, create_panel_done, create_screen_app,
     create_add_person_dialog, create_my_task_container, create_responsible_person_dialog, create_confirm_delete_task_dialog,
-    create_files_dialog
+    create_files_dialog, create_progress_bar
 )
 
 def main_screen(page, login, password):
@@ -323,6 +323,8 @@ def main_screen(page, login, password):
         for task in tasks:
             responsible_users = get_responsible_users(task.id)
             if user_id in responsible_users and not any(container.task_id == task.id for container in my_task_list.controls):
+                progress_bar = create_progress_bar()
+
                 task_container = create_my_task_container(
                     task.id, 
                     task.taskname, 
@@ -330,7 +332,8 @@ def main_screen(page, login, password):
                     open_task, 
                     show_responsible_users_dialog, 
                     add_file, 
-                    get_files
+                    get_files,
+                    progress_bar
                 )
 
                 # Находим подзадачи для текущей задачи
@@ -340,18 +343,28 @@ def main_screen(page, login, password):
                 test_list = task_container.in_all_task_list_test
                 completed_list = task_container.in_all_task_list_completed
 
+                # Обновляем прогресс-бар
+                total_subtasks = len(task_subtasks)
+                completed_count = sum(1 for subtask in task_subtasks if subtask.status == "Готово")
+
+                # Логирование для отладки
+                print(f"Задача: {task.taskname}, Общее количество подзадач: {total_subtasks}, Выполненные: {completed_count}")
+
+                # Обновление значения прогресс-бара
+                if total_subtasks > 0:
+                    progress_bar.value = completed_count / total_subtasks 
+                else:
+                    progress_bar.value = 0
+
                 # Добавляем подзадачи в соответствующие списки
                 for subtask in task_subtasks:
                     if subtask.status == "В процессе":
                         subtask_row = create_subtask_container(subtask.id, subtask.subtaskname, process_list, test_list, completed_list)
                         process_list.controls.append(subtask_row)
                     elif subtask.status == "На проверке":
-                        # Проверяем является ли пользователь администратором
-                        # Если да, то создаем чекбокс
                         if admin_role:
                             subtask_row = create_subtask_container(subtask.id, subtask.subtaskname, process_list, test_list, completed_list)
                             test_list.controls.append(subtask_row)
-                        # Если нет, то создаем строку с текстом
                         else:
                             subtask_text_row = ft.Row(
                                 controls=[
@@ -362,7 +375,6 @@ def main_screen(page, login, password):
                             )
                             test_list.controls.append(subtask_text_row)
                     elif subtask.status == "Готово":
-                        # Создаем строку для подзадачи и добавляем в список завершенных
                         subtask_compl_row = ft.Row(
                             controls=[
                                 ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.GREEN),
@@ -385,11 +397,13 @@ def main_screen(page, login, password):
         for task in tasks:
 
             if not any(container.task_id == task.id for container in all_task_list.controls):
+                progress_bar = create_progress_bar()    
+                
                 task_container = create_task_container(
                     task.id, task.taskname, confirm_name_task, open_task,
                     add_people, all_task_list, page, show_confirm_delete_task_dialog,
                     add_subtask, admin_role, show_responsible_users_dialog,
-                    add_file, get_files
+                    add_file, get_files, progress_bar
                 )
 
                 # Находим подзадачи для текущей задачи
@@ -398,6 +412,19 @@ def main_screen(page, login, password):
                 process_list = task_container.in_all_task_list_process
                 test_list = task_container.in_all_task_list_test
                 completed_list = task_container.in_all_task_list_completed
+
+                # Обновляем прогресс-бар
+                total_subtasks = len(task_subtasks)
+                completed_count = sum(1 for subtask in task_subtasks if subtask.status == "Готово")
+
+                # Логирование для отладки
+                print(f"Задача: {task.taskname}, Общее количество подзадач: {total_subtasks}, Выполненные: {completed_count}")
+
+                # Обновление значения прогресс-бара
+                if total_subtasks > 0:
+                    progress_bar.value = completed_count / total_subtasks 
+                else:
+                    progress_bar.value = 0
 
                 # Добавляем подзадачи в соответствующие списки
                 for subtask in task_subtasks:
