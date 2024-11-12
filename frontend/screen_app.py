@@ -299,14 +299,10 @@ def main_screen(page, login, password):
             update_subtask(subtask_id, subtask_input.value)
 
         # Привязываем обработчик изменения текстового поля
-
         subtask_input.on_change = on_change_subtask_name
 
         # Добавляем строку с чекбоксом в список подзадач
         process_list.controls.append(subtask_row)
-
-        # Обновляем прогресс-бар
-        #update_progress_bar(process_list, test_list, completed_list)
 
         page.update()  # Обновляем страницу
 
@@ -484,7 +480,6 @@ def main_screen(page, login, password):
                     test_list.controls.append(subtask_row)
                     update_subtask_status(subtask_id, "На проверке")
 
-                    #update_progress_bar(process_list, test_list, completed_list)
                 else:
                     subtask_text_row = ft.Row(
                         controls=[
@@ -496,7 +491,6 @@ def main_screen(page, login, password):
                     test_list.controls.append(subtask_text_row)
                     update_subtask_status(subtask_id, "На проверке")
 
-                    #update_progress_bar(process_list, test_list, completed_list)
                     print("Подзадача добавлена в список 'На проверке'.")
 
         # Проверяем, находится ли подзадача в списке "На проверке"
@@ -518,7 +512,6 @@ def main_screen(page, login, password):
                 completed_list.controls.append(subtask_text_completed_row)
                 update_subtask_status(subtask_id, "Готово")
 
-                #update_progress_bar(process_list, test_list, completed_list)
                 print("Подзадача добавлена в список 'Готово'.")
 
         else:
@@ -532,16 +525,6 @@ def main_screen(page, login, password):
         test_list.update()
         completed_list.update()
         page.update()  # Обновляем страницу после изменений
-
-    # def update_progress_bar(process_list, test_list, completed_list):
-    #     total_subtasks = len(process_list.controls) + len(test_list.controls) + len(completed_list.controls)
-    #     completed_subtask = len(completed_list.controls)
-
-    #     if total_subtasks > 0:
-    #         progress = completed_subtask / total_subtasks
-    #         progress_bar.value = progress
-    #         progress_bar.label = f"{int(progress * 100)}%"
-    #         progress_bar.update()
     
     # Интервальный вызов функций обновления списков задач
     repeater(300, load_my_tasks)

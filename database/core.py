@@ -105,12 +105,14 @@ def insert_file(task_id, file_name, file_data):
         conn.commit()
         return file_id
 
+# Функция находит файл по id
 def get_files_by_task(task_id):
     with sync_engine.connect() as conn:
         stmt = select(files_table).where(files_table.c.id_task == task_id)
         result = conn.execute(stmt).fetchall()
         return result
-    
+
+# Функция удаляет файл   
 def delete_file(file_id):
     with sync_engine.connect() as conn:
         stmt = delete(files_table).where(files_table.c.id == file_id)
