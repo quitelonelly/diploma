@@ -578,6 +578,7 @@ def create_my_task_container(task_id, task_name, open_task, show_responsible_use
     my_task_container.in_all_task_list_test = in_all_task_list_test
     my_task_container.in_all_task_list_completed = in_all_task_list_completed
     my_task_container.progress_bar = progress_bar
+    my_task_container.title_task = title_task
 
     my_task_container.is_open = False  # добавляем атрибут is_open
     
@@ -836,19 +837,21 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
     all_task_container.in_all_task_list_test = in_all_task_list_test
     all_task_container.in_all_task_list_completed = in_all_task_list_completed
     all_task_container.progress_bar = progress_bar
+    all_task_container.title_task = title_task
     
     all_task_container.task_id = task_id
     all_task_container.is_open = False  # добавляем атрибут is_open
     return all_task_container
 
-def create_completed_task_container(task_id, task_name, open_task, completed_task_list, 
+def create_completed_task_container(task_id, task_name, open_task, completed_list,
                                     page, show_responsible_users_dialog, get_files):
 
-    title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
+    title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=True, border_width=0, width=None, max_lines=2, expand=True)
     
     progress_bar = ft.ProgressBar(width=200, height=10, color=ft.colors.GREEN, value=0, bar_height=10, border_radius=10)
+    progress_bar.value = 1
 
-    in_comp_task_list_completed = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
+    in_comp_task_list_test = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
 
     # Создаем контейнер файла
     file_container = create_file_container(task_id, get_files)
@@ -894,6 +897,7 @@ def create_completed_task_container(task_id, task_name, open_task, completed_tas
                     animate_opacity=900,  # добавляем анимацию прозрачности
                     opacity=1,  # начальная прозрачность
                 ),
+                in_comp_task_list_test,
                 file_container,  # Используем file_container для отображения файлов
             ],
             alignment=ft.MainAxisAlignment.START,
@@ -923,7 +927,7 @@ def create_completed_task_container(task_id, task_name, open_task, completed_tas
                     animate_opacity=900,  # добавляем анимацию прозрачности
                     opacity=1,  # начальная прозрачность
                 ),
-                in_comp_task_list_completed,
+                completed_list,
             ],
             spacing=10,
         ),
@@ -987,8 +991,6 @@ def create_completed_task_container(task_id, task_name, open_task, completed_tas
         border_radius=10,
         padding=ft.padding.all(10)
     )
-
-    comp_task_container.in_all_task_list_completed = in_comp_task_list_completed
     
     comp_task_container.task_id = task_id
     comp_task_container.is_open = False  # добавляем атрибут is_open
@@ -1084,7 +1086,8 @@ def create_panel_all_tasks(add_task, all_task_list, is_admin):
     )
     return panel_all_tasks
 
-def create_panel_done():
+def create_panel_done(completed_task_list):
+    
     panel_done = ft.Container(
         content=ft.Column(  
             [   
@@ -1094,6 +1097,7 @@ def create_panel_done():
                     ],
                     spacing=10,
                 ),
+                completed_task_list
             ],
             alignment=ft.MainAxisAlignment.START,
             spacing=10,

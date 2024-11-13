@@ -18,6 +18,7 @@ tasks_table = Table(
     metadata_obj,
     Column("id", BigInteger, primary_key=True),
     Column("taskname", String),
+    Column("status", String),
 )
 
 # Таблица с файлами

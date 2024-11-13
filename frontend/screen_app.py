@@ -11,7 +11,7 @@ from threading import Timer
 from database.core import (
     get_subtasks, insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
     get_user_id_by_login, get_responsible_users, delete_task, insert_subtask, update_subtask, update_subtask_status,
-    get_role_user, insert_file, get_files_by_task, delete_file
+    get_role_user, insert_file, get_files_by_task, delete_file, update_task_status
     )
 
 from frontend.layout import (
@@ -19,7 +19,7 @@ from frontend.layout import (
     create_edit_btn, create_exit_btn, create_profile_dialog, create_task_container, create_header_container,
     create_nav_container, create_panel_my_task, create_panel_all_tasks, create_panel_done, create_screen_app,
     create_add_person_dialog, create_my_task_container, create_responsible_person_dialog, create_confirm_delete_task_dialog,
-    create_files_dialog, create_progress_bar
+    create_files_dialog, create_progress_bar, create_completed_task_container
 )
 
 def main_screen(page, login, password):
@@ -553,11 +553,11 @@ def main_screen(page, login, password):
         completed_list.update()
 
         # Обновляем прогресс-бар
-        update_progress_bar(task_id, process_list, test_list, completed_list)
+        update_progress_bar(task_id, process_list, test_list, completed_list, all_task_list)
 
         page.update()  # Обновляем страницу после изменений
 
-    def update_progress_bar(task_id, process_list, test_list, completed_list):
+    def update_progress_bar(task_id, process_list, test_list, completed_list, all_task_list):
         total_subtasks = len(process_list.controls) + len(test_list.controls) + len(completed_list.controls)
         completed_count = len(completed_list.controls)
 
@@ -571,6 +571,32 @@ def main_screen(page, login, password):
         for task_container in all_task_list.controls:
             if task_container.task_id == task_id:  # Найти соответствующий контейнер задачи
                 task_container.progress_bar.value = progress_value  # Обновляем значение прогресс-бара
+
+                # Проверяем, заполнен ли прогресс бар
+                if progress_value == 1.0:  # Можно использовать '==' для точной проверки
+                    print("Задача выполнена!")
+                    update_task_status(task_id, "Выполнено")  # Обновляем статус задачи в базе данных
+                    
+                    print("Создание контейнера для выполненной задачи")
+                    completed_task_container = create_completed_task_container(
+                        task_id, 
+                        task_container.title_task.value, 
+                        open_task, 
+                        completed_list,
+                        page, 
+                        show_responsible_users_dialog, 
+                        get_files
+                    )
+                    print("Контейнер для выполненной задачи создан:", completed_task_container)
+
+                    # Удаляем контейнер задачи из списка активных задач
+                    all_task_list.controls.remove(task_container)  # Удаляем контейнер задачи
+
+                    # Добавляем выполненную задачу в список "Выполнено"
+                    completed_task_list.controls.append(completed_task_container)
+                    print("Задача перемещена в список 'Выполнено'.")
+
+                    page.update()  # Обновляем страницу после изменений
                 break
 
         # Обновляем интерфейс прогресс-бара
@@ -670,9 +696,8 @@ def main_screen(page, login, password):
     # Контейнер с "Все задачи"
     panel_all_tasks = create_panel_all_tasks(add_task, all_task_list, admin_role)
 
-    
     # Контейнер с "Выполнено"
-    panel_done = create_panel_done()
+    panel_done = create_panel_done(completed_task_list)
     
     # Основной контейнер с функционалом приложения
     main_container = ft.Container(  

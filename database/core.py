@@ -70,7 +70,7 @@ def check_user_pass(username, userpass):
 def insert_task(title_task):
     with sync_engine.connect() as conn:
         stmt = insert(tasks_table).values(
-            {"taskname": title_task}
+            {"taskname": title_task, "status": "Выполняется"}
         ).returning(tasks_table.c.id)
         
         result = conn.execute(stmt)
@@ -78,6 +78,12 @@ def insert_task(title_task):
         
         conn.commit()
         return task_id
+    
+def update_task_status(task_id, new_status):
+    with sync_engine.connect() as conn:
+        stmt = update(tasks_table).where(tasks_table.c.id == task_id).values(status=new_status)
+        conn.execute(stmt)
+        conn.commit()
 
 # Функция для записи подзадачи в БД
 def insert_subtask(subtask_name, task_id):
@@ -147,6 +153,7 @@ def delete_task(task_id, task_container, all_task_list, page, dialog):
         # Удаляем связи с таблицей responsible
         conn.execute(delete(responsible_table).where(responsible_table.c.id_task == task_id))
         conn.execute(delete(subtask_table).where(subtask_table.c.id_task == task_id))
+        conn.execute(delete(files_table).where(files_table.c.id_task == task_id))
         
         # Удаляем задачу
         stmt = delete(tasks_table).where(tasks_table.c.id == task_id)
