@@ -810,6 +810,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                                 ),
                                 on_click=lambda e: show_responsible_users_dialog(task_id, e),
                             ),
+                            
                             progress_bar,
                         ],
                     ),
@@ -969,6 +970,7 @@ def create_completed_task_container(task_id, task_name, open_task, completed_lis
                                 ),
                                 on_click=lambda e: show_responsible_users_dialog(task_id, e),
                             ),      
+
                         progress_bar,
                     ],
                 ),
@@ -1086,7 +1088,13 @@ def create_panel_all_tasks(add_task, all_task_list, is_admin):
     )
     return panel_all_tasks
 
-def create_panel_done(completed_task_list):
+def create_panel_done(completed_task_list, load_comp_tasks):
+
+    btn_update = ft.IconButton(
+        icon=ft.icons.UPDATE,
+        tooltip="Обновить",
+        on_click=lambda e: load_comp_tasks()
+    )
     
     panel_done = ft.Container(
         content=ft.Column(  
@@ -1094,6 +1102,7 @@ def create_panel_done(completed_task_list):
                 ft.Row(
                     [
                         ft.Text("Выполнено", style="headlineMedium"),
+                        btn_update
                     ],
                     spacing=10,
                 ),
