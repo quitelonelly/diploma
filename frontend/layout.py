@@ -846,7 +846,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
     return all_task_container
 
 def create_completed_task_container(task_id, task_name, open_task, completed_list,
-                                    page, show_responsible_users_dialog, get_files):
+                                    page, show_responsible_users_dialog, get_files, completed_task_list, show_confirm_delete_task_dialog):
 
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=True, border_width=0, width=None, max_lines=2, expand=True)
     
@@ -971,6 +971,16 @@ def create_completed_task_container(task_id, task_name, open_task, completed_lis
                                 ),
                                 on_click=lambda e: show_responsible_users_dialog(task_id, e),
                             ),      
+
+                        ft.TextButton(
+                                content=ft.Row(
+                                    [
+                                        ft.Text("Удалить задачу", color = ft.colors.RED),
+                                        ft.Icon(ft.icons.DELETE, color = ft.colors.RED)
+                                    ],
+                                ),
+                                on_click=lambda e: show_confirm_delete_task_dialog(task_id, e, comp_task_container, completed_task_list, page),
+                            ),
 
                         progress_bar,
                     ],

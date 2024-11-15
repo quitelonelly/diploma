@@ -502,7 +502,9 @@ def main_screen(page, login, password):
                     completed_list,
                     page,
                     show_responsible_users_dialog,
-                    get_files
+                    get_files,
+                    completed_task_list,
+                    show_confirm_delete_task_dialog
                 )
 
                 # Добавляем выполненную задачу в список "Выполнено"
@@ -629,7 +631,9 @@ def main_screen(page, login, password):
                         completed_list,
                         page, 
                         show_responsible_users_dialog, 
-                        get_files
+                        get_files,
+                        completed_task_list,
+                        show_confirm_delete_task_dialog
                     )
                     print("Контейнер для выполненной задачи создан:", completed_task_container)
 
@@ -683,10 +687,13 @@ def main_screen(page, login, password):
 
         # Обновляем main_container в зависимости от текущей выбранной панели
         if main_container.content == panel_my_tasks:
+            my_task_list.controls.clear()
             load_my_tasks(filtered_tasks)  # Передайте отфильтрованные задачи в функцию загрузки моих задач
         elif main_container.content == panel_all_tasks:
+            all_task_list.controls.clear()
             load_tasks(filtered_tasks)  # Передайте отфильтрованные задачи в функцию загрузки всех задач
         elif main_container.content == panel_done:
+            completed_task_list.controls.clear()
             load_comp_tasks(filtered_tasks)  # Передайте отфильтрованные задачи в функцию загрузки выполненных задач
 
         
