@@ -312,12 +312,12 @@ def main_screen(page, login, password):
         Timer(interval, repeater, [interval, function]).start()
         function()
 
-    def load_my_tasks():
+    def load_my_tasks(filtered_task=None):
         my_task_list.controls.clear()
 
         user_id = get_user_id_by_login(login)
 
-        tasks = get_tasks()
+        tasks = filtered_task if filtered_task else get_tasks()
         subtasks = get_subtasks()
 
         for task in tasks:
@@ -391,10 +391,10 @@ def main_screen(page, login, password):
 
         page.update()  # Обновляем страницу после загрузки задач
 
-    def load_tasks():
+    def load_tasks(filtered_task=None):
         all_task_list.controls.clear()
 
-        tasks = get_tasks()  # Получаем все задачи
+        tasks = filtered_task if filtered_task else get_tasks() # Получаем все задачи
         subtasks = get_subtasks()  # Получаем все подзадачи
 
         for task in tasks:
@@ -469,10 +469,10 @@ def main_screen(page, login, password):
 
         page.update()  # Обновляем страницу после загрузки задач
 
-    def load_comp_tasks():
+    def load_comp_tasks(filtered_task=None):
         completed_task_list.controls.clear()  # Очищаем текущий список выполненных задач
 
-        tasks = get_tasks()  # Получаем все задачи
+        tasks = filtered_task if filtered_task else get_tasks() # Получаем все задачи
         subtasks = get_subtasks()  # Получаем все подзадачи
 
         for task in tasks:
@@ -673,9 +673,25 @@ def main_screen(page, login, password):
 
     def exit_profile(e):
         print("Выход из профиля")
+
+    def search_task(search_query):
+        # Получаем все задачи
+        all_tasks = get_tasks()
+        
+        # Фильтруем задачи по запросу
+        filtered_tasks = [task for task in all_tasks if search_query.lower() in task.taskname.lower()]
+
+        # Обновляем main_container в зависимости от текущей выбранной панели
+        if main_container.content == panel_my_tasks:
+            load_my_tasks(filtered_tasks)  # Передайте отфильтрованные задачи в функцию загрузки моих задач
+        elif main_container.content == panel_all_tasks:
+            load_tasks(filtered_tasks)  # Передайте отфильтрованные задачи в функцию загрузки всех задач
+        elif main_container.content == panel_done:
+            load_comp_tasks(filtered_tasks)  # Передайте отфильтрованные задачи в функцию загрузки выполненных задач
+
         
     # Создание кнопок навигации и инпута поиска
-    input_task = create_input_task()
+    input_task = create_input_task(search_task)
     
     my_task_button = create_my_task_btn(my_task_app)
 

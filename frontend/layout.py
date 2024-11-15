@@ -81,7 +81,7 @@ def create_auth_panel(user_login, user_pass, btn_auth, already_auth_text, sign_u
 
 # Основной экран приложения
 
-def create_input_task():
+def create_input_task(search_task):
     input_task = ft.TextField(
         label="Поиск",
         hint_text="Поиск задачи",
@@ -91,6 +91,7 @@ def create_input_task():
         color="#a0cafd",
         max_lines=1,
         prefix_icon=ft.icons.SEARCH,
+        on_change=lambda e: search_task(e.control.value),
     )
     return input_task
 
