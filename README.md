@@ -22,6 +22,29 @@ PULSE - универсальный инструмент для малых и с�
    ```
    git clone https://github.com/quitelonelly/diploma
    ```
+ - Перейдите в директорию проекта
+   ```
+   cd название_директории
+   ```
+ - Создайте и активируйте виртуальное окружение
+   - На Windows
+   ```
+   python3 -m venv venv
+   source venv/Scripts/activate
+   ```
+   - На macOS и Linux
+   ```
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+ - Установите зависимости
+   ```
+   pip install -r requirements.txt
+   ```
+ - Запустите приложение
+   ```
+   python3 -m frontend.main
+   ```
 
 # Технологии
  - Frontend: Python, flet
