@@ -127,6 +127,6 @@ def main(page):
     panel_auth = create_auth_panel(user_login, user_pass, btn_auth, already_auth_text, sign_up_button)
 
     # Показ экрана регистрации
-    page.add(panel_register)
+    page.add(panel_auth)
 
 ft.app(target=main)

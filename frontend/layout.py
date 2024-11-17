@@ -294,6 +294,48 @@ def create_add_person_dialog(get_users, close_icon, page, insert_person, task_id
     )
     return add_person_dialog
 
+def create_update_profile_dialog(close_icon, new_username_input, new_password_input, save_button):
+    update_dialog = ft.AlertDialog(
+        modal=False,
+        content=ft.Container(
+            content=ft.Column(
+                [
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                ft.Row(
+                                    [close_icon],
+                                    alignment=ft.MainAxisAlignment.END
+                                ),
+                                ft.Text("Редактирование профиля", size=24, weight=ft.FontWeight.BOLD),
+                                ft.Text("Введите новые данные", size=18),
+                            ],
+                            spacing=10,
+                        ),
+                        padding=ft.padding.all(10),
+                    ),
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                new_username_input,
+                                new_password_input,
+                                save_button
+                            ],
+                            spacing=15,
+                            alignment=ft.MainAxisAlignment.CENTER,
+                        ),
+                        padding=ft.padding.all(10),
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            ),
+            width=340,
+            height=350,
+            border_radius=10,
+        )
+    )
+    return update_dialog
+
 def create_confirm_delete_task_dialog(delete_task, task_id, task_container, all_task_list, page, close_icon):
     confirm_delete_task_dialog = ft.AlertDialog(
         modal=False,

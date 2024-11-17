@@ -248,3 +248,11 @@ def get_str_subtasks(task_id):
         stmt = select(subtask_table.c.id).where(subtask_table.c.id_task == task_id)
         result = conn.execute(stmt)
         return result 
+    
+def update_user(login, new_username, new_password):
+    with sync_engine.connect() as conn:
+        stmt = update(users_table).where(users_table.c.username == login).values(
+            {"username": new_username, "userpass": new_password}
+        )
+        conn.execute(stmt)
+        conn.commit()

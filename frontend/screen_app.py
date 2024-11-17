@@ -2,13 +2,14 @@
 import flet as ft
 import time
 import os
+import platform
 
 from threading import Timer
 
 from database.core import (
     get_subtasks, insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
     get_user_id_by_login, get_responsible_users, delete_task, insert_subtask, update_subtask, update_subtask_status,
-    get_role_user, insert_file, get_files_by_task, delete_file, update_task_status
+    get_role_user, insert_file, get_files_by_task, delete_file, update_task_status, update_user
     )
 
 from frontend.layout import (
@@ -16,7 +17,7 @@ from frontend.layout import (
     create_edit_btn, create_exit_btn, create_profile_dialog, create_task_container, create_header_container,
     create_nav_container, create_panel_my_task, create_panel_all_tasks, create_panel_done, create_screen_app,
     create_add_person_dialog, create_my_task_container, create_responsible_person_dialog, create_confirm_delete_task_dialog,
-    create_files_dialog, create_progress_bar, create_completed_task_container
+    create_files_dialog, create_progress_bar, create_completed_task_container, create_update_profile_dialog
 )
 
 def main_screen(page, login, password):
@@ -151,7 +152,36 @@ def main_screen(page, login, password):
         confirm_delete_task_dialog.open = True
         page.update()
 
-    import platform
+    def show_update_profile_dialog(update_user, login):
+
+        def close_dialog(dialog):
+            dialog.open = False
+            page.update()
+
+        close_icon = ft.IconButton(
+            icon=ft.icons.CLOSE,
+            icon_color=ft.colors.WHITE,
+            on_click=lambda _: close_dialog(update_profile_dialog)
+        )
+
+        # Создаем текстовые поля для нового логина и пароля
+        new_username_input = ft.TextField(label="Новый логин", width=320)
+        new_password_input = ft.TextField(label="Новый пароль", width=320, password=True)
+
+        # Кнопка для сохранения изменений
+        save_button = ft.CupertinoFilledButton(
+            text="Сохранить",
+            width=320,
+            on_click=lambda e: update_user(login, new_username_input.value, new_password_input.value)
+        )
+
+        update_profile_dialog = create_update_profile_dialog(
+            close_icon, new_username_input, new_password_input, save_button
+        )
+
+        page.dialog = update_profile_dialog
+        update_profile_dialog.open = True
+        page.update()
 
     def download_file(file_data, file_name):
 
@@ -674,6 +704,7 @@ def main_screen(page, login, password):
     # Функции кнопок "Редактировать" и "Выйти"
     def edit_profile(e):
         print("Редактирование профиля")
+        show_update_profile_dialog(update_user, login)
 
     def exit_profile(e):
         print("Выход из профиля")
