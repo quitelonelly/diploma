@@ -342,6 +342,7 @@ def main_screen(page, login, password):
         Timer(interval, repeater, [interval, function]).start()
         function()
 
+    # Функция для выгрузки задач из БД
     def load_my_tasks(filtered_task=None):
         my_task_list.controls.clear()
 
@@ -421,6 +422,7 @@ def main_screen(page, login, password):
 
         page.update()  # Обновляем страницу после загрузки задач
 
+    # Функция для выгрузки задач из БД
     def load_tasks(filtered_task=None):
         all_task_list.controls.clear()
 
@@ -499,6 +501,7 @@ def main_screen(page, login, password):
 
         page.update()  # Обновляем страницу после загрузки задач
 
+    # Функция для выгрузки выполненных задач из БД
     def load_comp_tasks(filtered_task=None):
         completed_task_list.controls.clear()  # Очищаем текущий список выполненных задач
 
@@ -542,7 +545,7 @@ def main_screen(page, login, password):
 
         page.update()  # Обновляем страницу после загрузки задач
 
-
+    # Функция обрабатывает отметку чекбоксов
     def toggle_subtask(name, is_checked, process_list, test_list, completed_list, subtask_row, subtask_id, task_id, e):
         print("Текущий список 'В процессе':", [row.controls[1].value for row in process_list.controls if isinstance(row, ft.Row)])
         print("Текущий список 'На проверке':", [row.controls[1].value for row in test_list.controls if isinstance(row, ft.Row)])
@@ -633,6 +636,7 @@ def main_screen(page, login, password):
 
         page.update()  # Обновляем страницу после изменений
 
+    # Функция обновляет прогресс бар
     def update_progress_bar(task_id, process_list, test_list, completed_list, all_task_list):
         total_subtasks = len(process_list.controls) + len(test_list.controls) + len(completed_list.controls)
         completed_count = len(completed_list.controls)
