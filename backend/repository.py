@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from database.db import new_session
 from database.models import responsible_table
-from backend.shemas import Task, User, UserAdd, UserORM, TaskORM
+from backend.shemas import Task, TaskAdd, User, UserAdd, UserORM, TaskORM
 
 
 class UserRepository:
@@ -32,6 +32,18 @@ class UserRepository:
             return user_schemas
         
 class TaskRepository:
+    
+    @classmethod
+    async def add_task(cls, data: TaskAdd) -> int:
+        async with new_session() as session:
+            task_dict = data.model_dump()
+
+            task = TaskORM(**task_dict)
+            session.add(task)
+            await session.flush()
+            await session.commit()
+
+            return task.id
     
     @classmethod
     async def get_tasks(cls):

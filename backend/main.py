@@ -3,7 +3,7 @@ from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
 
 from backend.repository import TaskRepository, UserRepository
-from backend.shemas import Task, User, UserAdd
+from backend.shemas import Task, TaskAdd, User, UserAdd
 
 
 app = FastAPI(
@@ -21,6 +21,12 @@ async def add_user(user: Annotated[UserAdd, Depends()]) -> JSONResponse:
 async def get_users() -> list[User]:
     users = await UserRepository.get_users()
     return users
+
+# Запись новой задачи в БД
+@app.post("/new_task")
+async def add_task(task: Annotated[TaskAdd, Depends()]) -> JSONResponse:
+    task_id = await TaskRepository.add_task(task)
+    return {"Task added": True, "task_id": task_id}
 
 # Получение всех задач
 @app.get("/tasks")
