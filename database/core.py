@@ -2,25 +2,7 @@
 from database.models import metadata_obj, users_table, tasks_table, responsible_table, subtask_table, files_table
 from database.db import sync_engine
 from sqlalchemy import insert, select, update, delete
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-class Model(DeclarativeBase):
-    pass
-
-class UserORM(Model):
-    __tablename__ = "users"
-    
-    id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str]
-    userpass: Mapped[str]
-    permissions: Mapped[str | None]
-
-class TaskORM(Model):
-    __tablename__ = "tasks"
-    
-    id: Mapped[int] = mapped_column(primary_key=True)
-    taskname: Mapped[str]
-    
 # Функция создания таблиц
 def create_tables():
     # metadata_obj.drop_all(sync_engine)

@@ -1,11 +1,23 @@
 from sqlalchemy import select
 from database.db import new_session
-from database.core import UserORM, TaskORM
 from database.models import responsible_table
-from backend.shemas import Task, User
+from backend.shemas import Task, User, UserAdd, UserORM, TaskORM
 
 
 class UserRepository:
+
+    @classmethod
+    async def add_user(cls, data: UserAdd) -> int:
+        async with new_session() as session:
+            user_dict = data.model_dump()
+
+            user = UserORM(**user_dict)
+            session.add(user)
+            await session.flush()
+            await session.commit()
+
+            return user.id
+
     
     @classmethod
     async def get_users(cls):
@@ -52,9 +64,9 @@ class TaskRepository:
 def user_models_to_dict(user_model: UserORM) -> dict:
     return {
         'id': user_model.id,
-        'name': user_model.username,
-        'password': user_model.userpass,  
-        'permission': user_model.permissions 
+        'username': user_model.username,
+        'userpass': user_model.userpass,  
+        'permissions': user_model.permissions 
     }
     
 def task_models_to_dict(task_model: TaskORM) -> dict:

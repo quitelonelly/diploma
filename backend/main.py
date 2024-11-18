@@ -1,20 +1,26 @@
-from fastapi import FastAPI
+from typing import Annotated
+from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
 
 from backend.repository import TaskRepository, UserRepository
-from backend.shemas import Task, User
+from backend.shemas import Task, User, UserAdd
 
 
 app = FastAPI(
     title="Pulse"
 )
 
+# Запись нового пользователя в БД
+@app.post("/new_user")
+async def add_user(user: Annotated[UserAdd, Depends()]) -> JSONResponse:
+    user_id = await UserRepository.add_user(user)
+    return {"User added": True, "user_id": user_id}
+
 # Получение всех пользователей приложения
 @app.get("/users")
 async def get_users() -> list[User]:
     users = await UserRepository.get_users()
     return users
-    
 
 # Получение всех задач
 @app.get("/tasks")
@@ -24,6 +30,6 @@ async def get_tasks() -> list[Task]:
     
 # Получение задач по пользователю
 @app.get("/tasks/{user_id}")
-async def get_tasks_by_user_id(user_id: int):
+async def get_tasks_by_user_id(user_id: int) -> list[Task]:
     tasks = await TaskRepository.get_tasks_by_user_id(user_id)
     return tasks
