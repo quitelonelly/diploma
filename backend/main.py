@@ -24,5 +24,6 @@ async def get_tasks() -> list[Task]:
     
 # Получение задач по пользователю
 @app.get("/tasks/{user_id}")
-async def get_tasks(user_id: int):
-    ...
+async def get_tasks_by_user_id(user_id: int):
+    tasks = await TaskRepository.get_tasks_by_user_id(user_id)
+    return tasks
