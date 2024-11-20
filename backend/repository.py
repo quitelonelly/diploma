@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from database.db import new_session
-from database.models import responsible_table
-from backend.shemas import Task, TaskAdd, User, UserAdd, UserORM, TaskORM
+from database.models import responsible_table, subtask_table
+from backend.shemas import Task, TaskAdd, TaskORM, User, UserAdd, UserORM, Subtask, SubtaskAdd, SubtaskORM
 
 
 class UserRepository:
@@ -51,9 +51,9 @@ class TaskRepository:
             query = select(TaskORM)
             result = await session.execute(query)
             task_models = result.scalars().all()
-            
+
             task_dicts = [task_models_to_dict(task_model) for task_model in task_models]
-            
+
             task_schemas = [Task(**task_dict) for task_dict in task_dicts]
             return task_schemas
         
@@ -73,6 +73,24 @@ class TaskRepository:
             task_schemas = [Task(**task_dict) for task_dict in task_dicts]
             return task_schemas
             
+class SubtaskRepository:
+
+    @classmethod
+    async def get_subtasks(cls, task_id: int):
+        async with new_session() as session:
+            # Выбираем объекты ORM
+            query = select(SubtaskORM).where(SubtaskORM.id_task == task_id)
+            result = await session.execute(query)
+            subtask_models = result.scalars().all()  # Это должно вернуть объекты ORM
+
+            # Преобразуем объекты ORM в модели ответа
+            subtask_responses = [
+                Subtask(id=subtask_model.id, subtaskname=subtask_model.subtaskname, status=subtask_model.status)
+                for subtask_model in subtask_models
+            ]
+
+            return subtask_responses
+        
 def user_models_to_dict(user_model: UserORM) -> dict:
     return {
         'id': user_model.id,
@@ -85,4 +103,12 @@ def task_models_to_dict(task_model: TaskORM) -> dict:
     return {
         'id': task_model.id,
         'taskname': task_model.taskname,
+        'status': task_model.status,
+    }
+
+def subtask_models_to_dict(subtask_model: SubtaskORM) -> dict:
+    return {
+        'id': subtask_model.id,
+        'subtaskname': subtask_model.subtaskname,
+        'status': subtask_model.status,
     }

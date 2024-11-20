@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 class Model(DeclarativeBase):
@@ -20,6 +21,7 @@ class UserORM(Model):
 class User(UserAdd):
     id: int
 
+
 class TaskAdd(BaseModel):
     taskname: str
 
@@ -28,6 +30,24 @@ class TaskORM(Model):
     
     id: Mapped[int] = mapped_column(primary_key=True)
     taskname: Mapped[str]
+    status: Mapped[str] = mapped_column(default="Выполняется")
     
 class Task(TaskAdd):
+    status: str
+    id: int
+
+
+class SubtaskAdd(BaseModel):
+    subtaskname: str
+
+class SubtaskORM(Model):
+    __tablename__ = "subtasks"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    id_task: Mapped[int] = mapped_column(ForeignKey("tasks.id"))
+    subtaskname: Mapped[str]
+    status: Mapped[str] = mapped_column(default="В процессе")
+
+class Subtask(SubtaskAdd):
+    status: str
     id: int

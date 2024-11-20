@@ -2,8 +2,8 @@ from typing import Annotated
 from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
 
-from backend.repository import TaskRepository, UserRepository
-from backend.shemas import Task, TaskAdd, User, UserAdd
+from backend.repository import TaskRepository, UserRepository, SubtaskRepository
+from backend.shemas import Task, TaskAdd, User, UserAdd, Subtask, SubtaskAdd
 
 
 app = FastAPI(
@@ -39,3 +39,9 @@ async def get_tasks() -> list[Task]:
 async def get_tasks_by_user_id(user_id: int) -> list[Task]:
     tasks = await TaskRepository.get_tasks_by_user_id(user_id)
     return tasks
+
+# Получение подзадач по задаче
+@app.get("/subtasks/{task_id}")
+async def get_subtasks_by_task_id(task_id: int) -> list[Subtask]:
+    subtasks = await SubtaskRepository.get_subtasks(task_id)
+    return subtasks
