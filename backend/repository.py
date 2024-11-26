@@ -69,11 +69,24 @@ class TaskRepository:
             task_models = result.scalars().all()
 
             task_dicts = [task_models_to_dict(task_model) for task_model in task_models]
-
+            
             task_schemas = [Task(**task_dict) for task_dict in task_dicts]
             return task_schemas
             
 class SubtaskRepository:
+
+    @classmethod
+    async def add_subtask(cls, task_id: int, data: SubtaskAdd) -> int:
+        async with new_session() as session:
+            subtask_dict = data.model_dump()
+
+            # Связываем подзадачу с задачей
+            subtask = SubtaskORM(**subtask_dict, id_task=task_id)
+            session.add(subtask)
+            await session.flush()
+            await session.commit()
+
+            return subtask.id
 
     @classmethod
     async def get_subtasks(cls, task_id: int):

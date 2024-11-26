@@ -10,7 +10,7 @@ app = FastAPI(
     title="Pulse"
 )
 
-# Запись нового пользователя в БД
+# Запись нового пользователя
 @app.post("/new_user")
 async def add_user(user: Annotated[UserAdd, Depends()]) -> JSONResponse:
     user_id = await UserRepository.add_user(user)
@@ -22,7 +22,7 @@ async def get_users() -> list[User]:
     users = await UserRepository.get_users()
     return users
 
-# Запись новой задачи в БД
+# Запись новой задачи
 @app.post("/new_task")
 async def add_task(task: Annotated[TaskAdd, Depends()]) -> JSONResponse:
     task_id = await TaskRepository.add_task(task)
@@ -39,6 +39,12 @@ async def get_tasks() -> list[Task]:
 async def get_tasks_by_user_id(user_id: int) -> list[Task]:
     tasks = await TaskRepository.get_tasks_by_user_id(user_id)
     return tasks
+
+# Запись новой подзадачи
+@app.post("/{task_id}/new_subtask")
+async def add_subtask(task_id: int, subtask: Annotated[SubtaskAdd, Depends()]) -> JSONResponse:
+    subtask_id = await SubtaskRepository.add_subtask(task_id, subtask)
+    return {"Subtask added": True, "subtask_id": subtask_id}
 
 # Получение подзадач по задаче
 @app.get("/subtasks/{task_id}")
