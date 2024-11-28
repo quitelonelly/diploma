@@ -3,7 +3,7 @@ from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
 
 from backend.repository import TaskRepository, UserRepository, SubtaskRepository
-from backend.shemas import Task, TaskAdd, User, UserAdd, Subtask, SubtaskAdd
+from backend.shemas import Task, TaskAdd, User, UserAdd, Subtask, SubtaskAdd, UserUpdate
 
 
 app = FastAPI(
@@ -21,6 +21,13 @@ async def add_user(user: Annotated[UserAdd, Depends()]) -> JSONResponse:
 async def get_users() -> list[User]:
     users = await UserRepository.get_users()
     return users
+
+@app.put("/update_user")
+async def update_user(user: Annotated[UserUpdate, Depends()]) -> JSONResponse:
+    updated = await UserRepository.update_user(user)
+    if updated:
+        return {"User  updated": True}
+    return JSONResponse(status_code=404, content={"message": "User  not found"})
 
 # Запись новой задачи
 @app.post("/new_task")

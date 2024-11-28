@@ -18,6 +18,12 @@ class UserORM(Model):
     userpass: Mapped[str]
     permissions: Mapped[str | None]
 
+class UserUpdate(BaseModel):
+    id: int
+    username: str | None
+    userpass: str | None
+    permissions: str | None
+
 class User(UserAdd):
     id: int
 

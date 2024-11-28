@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from database.db import new_session
 from database.models import responsible_table, subtask_table
-from backend.shemas import Task, TaskAdd, TaskORM, User, UserAdd, UserORM, Subtask, SubtaskAdd, SubtaskORM
+from backend.shemas import Task, TaskAdd, TaskORM, User, UserAdd, UserORM, Subtask, SubtaskAdd, SubtaskORM, UserUpdate
 
 
 class UserRepository:
@@ -30,6 +30,25 @@ class UserRepository:
             
             user_schemas = [User(**user_dict) for user_dict in user_dicts]
             return user_schemas
+        
+    @classmethod
+    async def update_user(cls, data: UserUpdate) -> bool:
+        async with new_session() as session:
+            user = await session.get(UserORM, data.id)
+
+            if not user:
+                return False  # Пользователь не найден
+
+            # Обновляем только указанные поля
+            if data.username is not None:
+                user.username = data.username
+            if data.userpass is not None:
+                user.userpass = data.userpass
+            if data.permissions is not None:
+                user.permissions = data.permissions
+
+            await session.commit()
+            return True
         
 class TaskRepository:
     
