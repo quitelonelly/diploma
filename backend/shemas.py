@@ -43,6 +43,11 @@ class Task(TaskAdd):
     id: int
 
 
+class ResponsibleAdd(BaseModel):
+    task_id: int
+    user_id: int
+
+
 class SubtaskAdd(BaseModel):
     subtaskname: str
 

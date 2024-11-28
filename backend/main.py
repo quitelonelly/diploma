@@ -3,7 +3,7 @@ from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
 
 from backend.repository import TaskRepository, UserRepository, SubtaskRepository
-from backend.shemas import Task, TaskAdd, User, UserAdd, Subtask, SubtaskAdd, UserUpdate
+from backend.shemas import ResponsibleAdd, Task, TaskAdd, User, UserAdd, Subtask, SubtaskAdd, UserUpdate
 
 
 app = FastAPI(
@@ -22,6 +22,7 @@ async def get_users() -> list[User]:
     users = await UserRepository.get_users()
     return users
 
+# Обновление пользователя
 @app.put("/update_user")
 async def update_user(user: Annotated[UserUpdate, Depends()]) -> JSONResponse:
     updated = await UserRepository.update_user(user)
@@ -46,6 +47,14 @@ async def get_tasks() -> list[Task]:
 async def get_tasks_by_user_id(user_id: int) -> list[Task]:
     tasks = await TaskRepository.get_tasks_by_user_id(user_id)
     return tasks
+
+# Запись ответственного за задачу
+@app.post("/assign_responsible")
+async def assign_responsible(responsible: Annotated[ResponsibleAdd, Depends()]) -> JSONResponse:
+    success = await TaskRepository.add_responsible(responsible)
+    if success:
+        return {"message": "Responsible assigned successfully"}
+    return JSONResponse(status_code=400, content={"message": "Failed to assign responsible"})
 
 # Запись новой подзадачи
 @app.post("/{task_id}/new_subtask")

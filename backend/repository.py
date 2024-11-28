@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from database.db import new_session
 from database.models import responsible_table, subtask_table
-from backend.shemas import Task, TaskAdd, TaskORM, User, UserAdd, UserORM, Subtask, SubtaskAdd, SubtaskORM, UserUpdate
+from backend.shemas import ResponsibleAdd, Task, TaskAdd, TaskORM, User, UserAdd, UserORM, Subtask, SubtaskAdd, SubtaskORM, UserUpdate
 
 
 class UserRepository:
@@ -91,6 +91,25 @@ class TaskRepository:
             
             task_schemas = [Task(**task_dict) for task_dict in task_dicts]
             return task_schemas
+        
+    @classmethod
+    async def add_responsible(cls, data: ResponsibleAdd) -> bool:
+        async with new_session() as session:
+            try:
+                new_responsible = {
+                    "id_task": data.task_id,
+                    "id_user": data.user_id
+                }
+
+                result = await session.execute(responsible_table.insert().values(new_responsible))
+                await session.commit()
+
+                if result.rowcount == 0:
+                    return False
+                
+                return True
+            except Exception as e:
+                return False
             
 class SubtaskRepository:
 
