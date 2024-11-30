@@ -1,5 +1,6 @@
 # Импортируем необходимые библиотеки
 import flet as ft
+import httpx
 
 from database.core import create_tables, insert_user, check_user_pass
 from frontend.screen_app import main_screen
@@ -34,37 +35,43 @@ def main(page):
     def close_dialog(e):
         page.dialog.open = False
         page.update()
-    
+
     # Функция регистрации
-    def register(e):
-        result = insert_user(user_login.value, user_pass.value)
+    async def register(e):
+        async with httpx.AsyncClient() as client:
+            response = await client.post("http://localhost:8000/new_user", json={
+                "username": user_login.value,
+                "userpass": user_pass.value,
+                "permissions": "USER"
+            })
+            
+            if response.status_code == 200:
+                # Успешная регистрация
+                page.window.width = 1300
+                page.window.height = 750
+                page.window.resizable = False
+                
+                page.clean()
+                main_screen(page, user_login.value, user_pass.value) 
+                page.update()
+                return
 
-        if result is None:
-            
-            page.window.width = 1300
-            page.window.height = 750
-            page.window.resizable = False
-            
-            page.clean()
-            main_screen(page, user_login.value, user_pass.value) 
-            page.update()
-            return
+            # Обработка ошибок
+            if response.status_code == 400:
+                dialog = ft.AlertDialog(
+                    title=ft.Text("Ошибка"),
+                    content=ft.Text(response.json().get("message", "Ошибка")),
+                    actions=[ft.TextButton("ОК", on_click=close_dialog)]
+                )
+                page.dialog = dialog
+                dialog.open = True
+                
+                # Очистка полей после ошибки
+                user_login.value = ""
+                user_pass.value = ""
+                page.update()
 
-        if "существует" in result:
-            dialog = ft.AlertDialog(
-                title=ft.Text("Ошибка"),
-                content=ft.Text(result),
-                actions=[ft.TextButton("ОК", on_click=close_dialog)]
-            )
-            page.dialog = dialog
-            dialog.open = True
-            
-            # Очистка полей после ошибки
-            user_login.value = ""
-            user_pass.value = ""
-            page.update()
-    
-    # Функция авторизации       
+    # Функция авторизации            
     def auth(e):
         result = check_user_pass(user_login.value, user_pass.value)
         
@@ -92,6 +99,7 @@ def main(page):
             create_input_login(validate).value = ""
             create_input_pass(validate).value = ""
             page.update()
+
 
     # Функция показывает экран регистрации
     def show_sign_up():

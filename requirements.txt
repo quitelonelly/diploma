@@ -6,3 +6,5 @@ asyncpg
 fastapi
 uvicorn
 alembic
+httpx
+pyjwt

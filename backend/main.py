@@ -12,7 +12,8 @@ app = FastAPI(
 
 # Запись нового пользователя
 @app.post("/new_user")
-async def add_user(user: Annotated[UserAdd, Depends()]) -> JSONResponse:
+async def add_user(user: UserAdd) -> JSONResponse:
+    print(user) 
     user_id = await UserRepository.add_user(user)
     return {"User added": True, "user_id": user_id}
 

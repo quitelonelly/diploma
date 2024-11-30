@@ -18,7 +18,6 @@ class UserRepository:
 
             return user.id
 
-    
     @classmethod
     async def get_users(cls):
         async with new_session() as session:

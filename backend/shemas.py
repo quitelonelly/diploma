@@ -5,10 +5,12 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 class Model(DeclarativeBase):
     pass
 
+
 class UserAdd(BaseModel):
     username: str
     userpass: str
     permissions: str | None
+
 
 class UserORM(Model):
     __tablename__ = "users"
@@ -18,11 +20,13 @@ class UserORM(Model):
     userpass: Mapped[str]
     permissions: Mapped[str | None]
 
+
 class UserUpdate(BaseModel):
     id: int
     username: str | None
     userpass: str | None
     permissions: str | None
+
 
 class User(UserAdd):
     id: int
@@ -31,12 +35,14 @@ class User(UserAdd):
 class TaskAdd(BaseModel):
     taskname: str
 
+
 class TaskORM(Model):
     __tablename__ = "tasks"
     
     id: Mapped[int] = mapped_column(primary_key=True)
     taskname: Mapped[str]
     status: Mapped[str] = mapped_column(default="Выполняется")
+
     
 class Task(TaskAdd):
     status: str
@@ -50,6 +56,7 @@ class ResponsibleAdd(BaseModel):
 
 class SubtaskAdd(BaseModel):
     subtaskname: str
+    
 
 class SubtaskORM(Model):
     __tablename__ = "subtasks"
@@ -58,6 +65,7 @@ class SubtaskORM(Model):
     id_task: Mapped[int] = mapped_column(ForeignKey("tasks.id"))
     subtaskname: Mapped[str]
     status: Mapped[str] = mapped_column(default="В процессе")
+
 
 class Subtask(SubtaskAdd):
     status: str
