@@ -2,6 +2,7 @@ from sqlalchemy import select
 from database.db import new_session
 from database.models import responsible_table, subtask_table
 from backend.shemas import ResponsibleAdd, Task, TaskAdd, TaskORM, User, UserAdd, UserORM, Subtask, SubtaskAdd, SubtaskORM, UserUpdate
+from backend.utils import hash_password, verify_password
 
 
 class UserRepository:
@@ -10,6 +11,7 @@ class UserRepository:
     async def add_user(cls, data: UserAdd) -> int:
         async with new_session() as session:
             user_dict = data.model_dump()
+            user_dict['userpass'] = hash_password(data.userpass)  # Хешируем пароль перед сохранением
 
             user = UserORM(**user_dict)
             session.add(user)
@@ -17,7 +19,6 @@ class UserRepository:
             await session.commit()
 
             return user.id
-
     @classmethod
     async def get_users(cls):
         async with new_session() as session:
@@ -48,6 +49,15 @@ class UserRepository:
 
             await session.commit()
             return True
+        
+    @classmethod
+    async def get_user_by_username(cls, username: str):
+        async with new_session() as session:
+            query = select(UserORM).where(UserORM.username == username)
+            result = await session.execute(query)
+            user = result.scalar_one_or_none()
+
+            return user
         
 class TaskRepository:
     

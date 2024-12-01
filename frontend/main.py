@@ -39,7 +39,7 @@ def main(page):
     # Функция регистрации
     async def register(e):
         async with httpx.AsyncClient() as client:
-            response = await client.post("http://localhost:8000/new_user", json={
+            response = await client.post("http://localhost:8000/users", json={
                 "username": user_login.value,
                 "userpass": user_pass.value,
                 "permissions": "USER"
@@ -72,33 +72,41 @@ def main(page):
                 page.update()
 
     # Функция авторизации            
-    def auth(e):
-        result = check_user_pass(user_login.value, user_pass.value)
-        
-        if result == True:
+    async def auth(e):
+        async with httpx.AsyncClient() as client:
+            response = await client.post("http://localhost:8000/token", data={
+                "username": user_login.value,
+                "password": user_pass.value
+            })
             
-            page.window.width = 1300
-            page.window.height = 750
-            page.window.resizable = False
-            
-            page.clean()
-            main_screen(page, user_login.value, user_pass.value) 
-            page.update()
-            return
+            if response.status_code == 200:
+                token = response.json().get("access_token")
+                # Сохраните токен для дальнейшего использования
+                print(f"Получен токен: {token}")  # Для отладки, вы можете сохранить токен в переменной
 
-        if result == False:
-            dialog = ft.AlertDialog(
-                title=ft.Text("Ошибка"),
-                content=ft.Text("Проверьте введенные данные!"),
-                actions=[ft.TextButton("OK", on_click=close_dialog)]
-            )
-            page.dialog = dialog
-            dialog.open = True
-            
-            # Очистка полей после ошибки
-            create_input_login(validate).value = ""
-            create_input_pass(validate).value = ""
-            page.update()
+                # Переход на главный экран
+                page.window.width = 1300
+                page.window.height = 750
+                page.window.resizable = False
+                
+                page.clean()
+                main_screen(page, user_login.value, user_pass.value, token)  # Передаем токен на главный экран
+                page.update()
+                return
+
+            if response.status_code == 401:
+                dialog = ft.AlertDialog(
+                    title=ft.Text("Ошибка"),
+                    content=ft.Text("Неверные учетные данные!"),
+                    actions=[ft.TextButton("OK", on_click=close_dialog)]
+                )
+                page.dialog = dialog
+                dialog.open = True
+                
+                # Очистка полей после ошибки
+                user_login.value = ""
+                user_pass.value = ""
+                page.update()
 
 
     # Функция показывает экран регистрации

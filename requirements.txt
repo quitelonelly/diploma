@@ -8,3 +8,5 @@ uvicorn
 alembic
 httpx
 pyjwt
+python-jose
+bcrypt

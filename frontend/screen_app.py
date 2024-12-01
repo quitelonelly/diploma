@@ -20,7 +20,7 @@ from frontend.layout import (
     create_files_dialog, create_progress_bar, create_completed_task_container, create_update_profile_dialog
 )
 
-def main_screen(page, login, password):
+def main_screen(page, login, password, token):
     
     page.window.resizable = False
     admin_role = get_role_user(login)
