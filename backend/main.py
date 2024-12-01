@@ -75,9 +75,13 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> dict:
 # Запись нового пользователя
 @app.post("/users", tags=["Пользователи 👤"], summary="Добавить нового пользователя")
 async def add_user(user: Annotated[UserAdd, Depends()]) -> JSONResponse:
-    print(user) 
     user_id = await UserRepository.add_user(user)
-    return {"User added": True, "user_id": user_id}
+
+    # Создаем токен для нового пользователя
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(data={"sub": user_id}, expires_delta=access_token_expires)
+
+    return {"User  added": True, "user_id": user_id, "access_token": access_token, "token_type": "bearer"}
 
 # Получение всех пользователей приложения
 @app.get("/users", tags=["Пользователи 👤"], summary="Получить всех пользователей")

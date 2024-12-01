@@ -1,7 +1,11 @@
 from sqlalchemy import select
+
+from fastapi import HTTPException
+
 from database.db import new_session
 from database.models import responsible_table, subtask_table
 from backend.shemas import ResponsibleAdd, Task, TaskAdd, TaskORM, User, UserAdd, UserORM, Subtask, SubtaskAdd, SubtaskORM, UserUpdate
+
 from backend.utils import hash_password, verify_password
 
 
@@ -10,6 +14,11 @@ class UserRepository:
     @classmethod
     async def add_user(cls, data: UserAdd) -> int:
         async with new_session() as session:
+            # Проверяем, существует ли уже пользователь с таким логином
+            existing_user = await cls.get_user_by_username(data.username)
+            if existing_user:
+                raise HTTPException(status_code=400, detail="Пользователь с таким логином уже существует")
+
             user_dict = data.model_dump()
             user_dict['userpass'] = hash_password(data.userpass)  # Хешируем пароль перед сохранением
 
@@ -19,6 +28,7 @@ class UserRepository:
             await session.commit()
 
             return user.id
+        
     @classmethod
     async def get_users(cls):
         async with new_session() as session:

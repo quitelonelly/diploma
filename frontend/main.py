@@ -39,28 +39,36 @@ def main(page):
     # Функция регистрации
     async def register(e):
         async with httpx.AsyncClient() as client:
-            response = await client.post("http://localhost:8000/users", json={
-                "username": user_login.value,
-                "userpass": user_pass.value,
-                "permissions": "USER"
+            username = user_login.value
+            userpass = user_pass.value
+            permissions = "USER"
+
+            print(f"Username: {username}, Userpass: {userpass}, Permissions: {permissions}")
+
+            response = await client.post("http://localhost:8000/users", params={
+                "username": username,
+                "userpass": userpass,
+                "permissions": permissions
             })
-            
+
             if response.status_code == 200:
                 # Успешная регистрация
+                token = response.json().get("access_token")
+                print(f"Получен токен: {token}")  # Для отладки, вы можете сохранить токен в переменной
+
                 page.window.width = 1300
                 page.window.height = 750
                 page.window.resizable = False
                 
                 page.clean()
-                main_screen(page, user_login.value, user_pass.value) 
+                main_screen(page, user_login.value, user_pass.value, token)  # Передаем токен на главный экран
                 page.update()
                 return
-
-            # Обработка ошибок
-            if response.status_code == 400:
+            else:
+                print(f"Error: {response.status_code}, Response: {response.text}")
                 dialog = ft.AlertDialog(
                     title=ft.Text("Ошибка"),
-                    content=ft.Text(response.json().get("message", "Ошибка")),
+                    content=ft.Text(response.json().get("detail", "Ошибка")),
                     actions=[ft.TextButton("ОК", on_click=close_dialog)]
                 )
                 page.dialog = dialog
@@ -94,7 +102,7 @@ def main(page):
                 page.update()
                 return
 
-            if response.status_code == 401:
+            else:
                 dialog = ft.AlertDialog(
                     title=ft.Text("Ошибка"),
                     content=ft.Text("Неверные учетные данные!"),
