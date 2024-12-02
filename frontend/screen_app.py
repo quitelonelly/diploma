@@ -632,12 +632,12 @@ def main_screen(page, login, password, token):
         completed_list.update()
 
         # Обновляем прогресс-бар
-        update_progress_bar(task_id, process_list, test_list, completed_list, all_task_list)
+        update_progress_bar(task_id, process_list, test_list, completed_list, all_task_list, my_task_list)
 
         page.update()  # Обновляем страницу после изменений
 
     # Функция обновляет прогресс бар
-    def update_progress_bar(task_id, process_list, test_list, completed_list, all_task_list):
+    def update_progress_bar(task_id, process_list, test_list, completed_list, all_task_list, my_task_list):
         total_subtasks = len(process_list.controls) + len(test_list.controls) + len(completed_list.controls)
         completed_count = len(completed_list.controls)
 
@@ -647,42 +647,48 @@ def main_screen(page, login, password, token):
         else:
             progress_value = 0
 
-        # Обновляем прогресс-бар для текущей задачи
+        # Обновляем прогресс-бар для текущей задачи в all_task_list
         for task_container in all_task_list.controls:
             if task_container.task_id == task_id:  # Найти соответствующий контейнер задачи
                 task_container.progress_bar.value = progress_value  # Обновляем значение прогресс-бара
-
-                # Проверяем, заполнен ли прогресс бар
-                if progress_value == 1.0:  # Можно использовать '==' для точной проверки
-                    print("Задача выполнена!")
-                    update_task_status(task_id, "Выполнено")  # Обновляем статус задачи в базе данных
-                    
-                    print("Создание контейнера для выполненной задачи")
-                    completed_task_container = create_completed_task_container(
-                        task_id, 
-                        task_container.title_task.value, 
-                        open_task, 
-                        completed_list,
-                        page, 
-                        show_responsible_users_dialog, 
-                        get_files,
-                        completed_task_list,
-                        show_confirm_delete_task_dialog
-                    )
-                    print("Контейнер для выполненной задачи создан:", completed_task_container)
-
-                    # Удаляем контейнер задачи из списка активных задач
-                    all_task_list.controls.remove(task_container)  # Удаляем контейнер задачи
-
-                    # Добавляем выполненную задачу в список "Выполнено"
-                    completed_task_list.controls.append(completed_task_container)
-                    print("Задача перемещена в список 'Выполнено'.")
-
-                    page.update()  # Обновляем страницу после изменений
                 break
 
-        # Обновляем интерфейс прогресс-бара
-        page.update()
+        # Обновляем прогресс-бар для текущей задачи в my_task_list
+        for task_container in my_task_list.controls:
+            if task_container.task_id == task_id:  # Найти соответствующий контейнер задачи
+                task_container.progress_bar.value = progress_value  # Обновляем значение прогресс-бара
+                break
+
+        # Проверяем, заполнен ли прогресс бар
+        if progress_value == 1.0:  # Можно использовать '==' для точной проверки
+            print("Задача выполнена!")
+            update_task_status(task_id, "Выполнено")  # Обновляем статус задачи в базе данных
+            
+            print("Создание контейнера для выполненной задачи")
+            completed_task_container = create_completed_task_container(
+                task_id, 
+                task_container.title_task.value, 
+                open_task, 
+                completed_list,
+                page, 
+                show_responsible_users_dialog, 
+                get_files,
+                completed_task_list,
+                show_confirm_delete_task_dialog
+            )
+            print("Контейнер для выполненной задачи создан:", completed_task_container)
+
+            # Удаляем контейнер задачи из списка активных задач
+            all_task_list.controls.remove(task_container)  # Удаляем контейнер задачи
+
+            # Добавляем выполненную задачу в список "Выполнено"
+            completed_task_list.controls.append(completed_task_container)
+            print("Задача перемещена в список 'Выполнено'.")
+
+            page.update()  # Обновляем страницу после изменений
+
+    # Обновляем интерфейс прогресс-бара
+    page.update()
     
     # Интервальный вызов функций обновления списков задач
     repeater(300, load_my_tasks)
