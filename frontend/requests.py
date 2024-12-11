@@ -40,3 +40,11 @@ async def request_confirm_name_task(task_id, title_task):
                 })
             
             return response
+      
+async def request_add_task(taskname):
+      async with httpx.AsyncClient() as client:
+            response = await client.post("http://localhost:8000/tasks", params={
+                  "taskname": taskname
+            })
+
+            return response

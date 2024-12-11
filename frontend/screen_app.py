@@ -7,7 +7,7 @@ import httpx
 
 from threading import Timer
 
-from frontend.requests import request_get_user_role, request_confirm_name_task
+from frontend.requests import request_get_user_role, request_add_task
 
 from database.core import (
     get_subtasks, insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
@@ -257,19 +257,26 @@ async def main_screen(page, login, password, token):
         file_container.update()
         
     # Функция добавляет задачу в список        
-    def add_task(e):
+    async def add_task(e):
         print("Добавлена задача")
         
-        title_task = "Новая задача"
-        task_id = insert_task(title_task)
+        title_task = "Новая задача"  # Здесь вы можете получить название задачи от пользователя, например, из текстового поля
+        response = await request_add_task(title_task)  # Отправляем запрос на добавление задачи
 
-        progress_bar = create_progress_bar()
-
-        task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, 
-                                               add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask,
-                                               admin_role, show_responsible_users_dialog, add_file, get_files, progress_bar)
-        all_task_list.controls.append(task_container)
-        page.update()    
+        if response.status_code == 200:
+            task_id = response.json().get("task_id")  # Получаем ID новой задачи из ответа
+            print(f"Задача успешно добавлена с ID: {task_id}")
+            
+            # Здесь вы можете обновить интерфейс, чтобы отобразить новую задачу
+            # Например, добавьте задачу в список задач
+            progress_bar = create_progress_bar()  # Создаем прогресс-бар для новой задачи
+            task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, 
+                                                add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask,
+                                                admin_role, show_responsible_users_dialog, add_file, get_files, progress_bar)
+            all_task_list.controls.append(task_container)
+            page.update()    
+        else:
+            print(f"Ошибка при добавлении задачи: {response.status_code}, {response.text}")
 
     # Функция для создания контейнера подзадачи
     def create_subtask_container(subtask_id, task_id, subtask_name, process_list, test_list, completed_list, progress_bar):
