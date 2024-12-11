@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, status, Security
+from fastapi import Depends, FastAPI, HTTPException, status, Security, Body
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
@@ -89,6 +89,12 @@ async def get_users() -> list[User]:
     users = await UserRepository.get_users()
     return users
 
+# Получение роли пользователя
+@app.get("/users/role", tags=["Пользователи 👤"], summary="Получить роль пользователя")
+async def get_user_role_by_username(username: str) -> str:
+    role = await UserRepository.get_user_role_by_username(username)
+    return role
+
 # Обновление пользователя
 @app.put("/users", tags=["Пользователи 👤"], summary="Обновить данные пользователя")
 async def update_user(user: Annotated[UserUpdate, Depends()]) -> JSONResponse:
@@ -96,6 +102,7 @@ async def update_user(user: Annotated[UserUpdate, Depends()]) -> JSONResponse:
     if updated:
         return {"User  updated": True}
     return JSONResponse(status_code=404, content={"message": "User  not found"})
+
 
 # Запись новой задачи
 @app.post("/tasks", tags=["Задачи 📝"], summary="Добавить новую задачу")
@@ -122,6 +129,14 @@ async def assign_responsible(responsible: Annotated[ResponsibleAdd, Depends()]) 
     if success:
         return {"message": "Responsible assigned successfully"}
     return JSONResponse(status_code=400, content={"message": "Failed to assign responsible"})
+
+# Обновление названия задачи
+@app.put("/tasks/{task_id}/name", tags=["Задачи 📝"], summary="Обновить название задачи")
+async def update_task_name(task_id: int, new_name: str) -> JSONResponse:
+    updated = await TaskRepository.update_task_name(task_id, new_name)
+    if updated:
+        return {"message": "Task name updated successfully"}
+    return JSONResponse(status_code=404, content={"message": "Task not found"})
 
 # Запись новой подзадачи
 @app.post("/subtasks/{task_id}", tags=["Задачи 📝"], summary="Добавить новую подзадачу")

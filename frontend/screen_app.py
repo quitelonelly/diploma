@@ -3,8 +3,11 @@ import flet as ft
 import time
 import os
 import platform
+import httpx
 
 from threading import Timer
+
+from frontend.requests import request_get_user_role, request_confirm_name_task
 
 from database.core import (
     get_subtasks, insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
@@ -20,22 +23,43 @@ from frontend.layout import (
     create_files_dialog, create_progress_bar, create_completed_task_container, create_update_profile_dialog
 )
 
-def main_screen(page, login, password, token):
+async def main_screen(page, login, password, token):
     
     page.window.resizable = False
-    admin_role = get_role_user(login)
+
+    # Функция для получения роли пользователя
+    async def get_user_role():
+        response = await request_get_user_role(login)
+        
+        if response.status_code == 200:
+            role = response.text.strip().replace('"', '')  # Удаляем пробелы и кавычки
+            print(f"Полученная роль: {role}")  # Логируем полученную роль
+            if role == "ADMIN":
+                print("Вы вошли как администратор!")
+                return True
+            else:
+                print("Вы вошли как пользователь!")
+                return False
+        else:
+            print(f"Ошибка при получении роли: {response.status_code}, {response.text}")
+            return False  # Если произошла ошибка, возвращаем False
     
-    if admin_role:
-        print("Вы вошли как администратор!")
-    else:
-        print("Вы вошли как пользователь!")
+    admin_role = await get_user_role()
+
+    # Фукнция подтвержления изменения задачи   
+    # async def confirm_name_task(title_task, task_id, e):
+    #     response = await request_confirm_name_task(title_task, task_id)
+    #     if response.status_code == 200:
+    #         print("Название задачи успешно изменено!")
+    #     else:
+    #         print(f"Ошибка при изменении названия задачи: {response.status_code}, {response.text}")
 
     # Фукнция подтвержления изменения задачи   
     def confirm_name_task(title_task, task_id, e):
         update_task(task_id, title_task.value)
         
         print(f"Имя " + title_task.value + " сохранено!")
-        
+
     # Функция открывает контейнер задачи    
     def open_task(task_container, e):
         content_container = task_container.content.controls[2]

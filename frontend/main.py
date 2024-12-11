@@ -1,8 +1,10 @@
 # Импортируем необходимые библиотеки
+import asyncio
 import flet as ft
 import httpx
 
-from database.core import create_tables, insert_user, check_user_pass
+from database.core import create_tables
+from frontend.requests import request_reg, request_auth
 from frontend.screen_app import main_screen
 from frontend.layout import (
     create_input_login, create_input_pass, create_btn_reg, 
@@ -38,83 +40,68 @@ def main(page):
 
     # Функция регистрации
     async def register(e):
-        async with httpx.AsyncClient() as client:
-            username = user_login.value
-            userpass = user_pass.value
-            permissions = "USER"
+        response = await request_reg(user_login.value, user_pass.value)
 
-            print(f"Username: {username}, Userpass: {userpass}, Permissions: {permissions}")
+        if response.status_code == 200:
+            # Успешная регистрация
+            token = response.json().get("access_token")
+            print(f"Получен токен: {token}")  # Для отладки, вы можете сохранить токен в переменной
 
-            response = await client.post("http://localhost:8000/users", params={
-                "username": username,
-                "userpass": userpass,
-                "permissions": permissions
-            })
-
-            if response.status_code == 200:
-                # Успешная регистрация
-                token = response.json().get("access_token")
-                print(f"Получен токен: {token}")  # Для отладки, вы можете сохранить токен в переменной
-
-                page.window.width = 1300
-                page.window.height = 750
-                page.window.resizable = False
-                
-                page.clean()
-                main_screen(page, user_login.value, user_pass.value, token)  # Передаем токен на главный экран
-                page.update()
-                return
-            else:
-                print(f"Error: {response.status_code}, Response: {response.text}")
-                dialog = ft.AlertDialog(
-                    title=ft.Text("Ошибка"),
-                    content=ft.Text(response.json().get("detail", "Ошибка")),
-                    actions=[ft.TextButton("ОК", on_click=close_dialog)]
-                )
-                page.dialog = dialog
-                dialog.open = True
-                
-                # Очистка полей после ошибки
-                user_login.value = ""
-                user_pass.value = ""
-                page.update()
+            page.window.width = 1300
+            page.window.height = 750
+            page.window.resizable = False
+            
+            page.clean()
+            await main_screen(page, user_login.value, user_pass.value, token)  # Передаем токен на главный экран
+            page.update()
+            return
+        else:
+            print(f"Error: {response.status_code}, Response: {response.text}")
+            dialog = ft.AlertDialog(
+                title=ft.Text("Ошибка"),
+                content=ft.Text(response.json().get("detail", "Ошибка")),
+                actions=[ft.TextButton("ОК", on_click=close_dialog)]
+            )
+            page.dialog = dialog
+            dialog.open = True
+            
+            # Очистка полей после ошибки
+            user_login.value = ""
+            user_pass.value = ""
+            page.update()
 
     # Функция авторизации            
     async def auth(e):
-        async with httpx.AsyncClient() as client:
-            response = await client.post("http://localhost:8000/token", data={
-                "username": user_login.value,
-                "password": user_pass.value
-            })
+        response = await request_auth(user_login.value, user_pass.value)
             
-            if response.status_code == 200:
-                token = response.json().get("access_token")
-                # Сохраните токен для дальнейшего использования
-                print(f"Получен токен: {token}")  # Для отладки, вы можете сохранить токен в переменной
+        if response.status_code == 200:
+            token = response.json().get("access_token")
+            # Сохраните токен для дальнейшего использования
+            print(f"Получен токен: {token}")  # Для отладки, вы можете сохранить токен в переменной
 
-                # Переход на главный экран
-                page.window.width = 1300
-                page.window.height = 750
-                page.window.resizable = False
-                
-                page.clean()
-                main_screen(page, user_login.value, user_pass.value, token)  # Передаем токен на главный экран
-                page.update()
-                return
+            # Переход на главный экран
+            page.window.width = 1300
+            page.window.height = 750
+            page.window.resizable = False
+            
+            page.clean()
+            await main_screen(page, user_login.value, user_pass.value, token)  # Передаем токен на главный экран
+            page.update()
+            return
 
-            else:
-                dialog = ft.AlertDialog(
-                    title=ft.Text("Ошибка"),
-                    content=ft.Text("Неверные учетные данные!"),
-                    actions=[ft.TextButton("OK", on_click=close_dialog)]
-                )
-                page.dialog = dialog
-                dialog.open = True
-                
-                # Очистка полей после ошибки
-                user_login.value = ""
-                user_pass.value = ""
-                page.update()
+        else:
+            dialog = ft.AlertDialog(
+                title=ft.Text("Ошибка"),
+                content=ft.Text("Неверные учетные данные!"),
+                actions=[ft.TextButton("OK", on_click=close_dialog)]
+            )
+            page.dialog = dialog
+            dialog.open = True
+            
+            # Очистка полей после ошибки
+            user_login.value = ""
+            user_pass.value = ""
+            page.update()
 
 
     # Функция показывает экран регистрации
@@ -153,4 +140,5 @@ def main(page):
     # Показ экрана регистрации
     page.add(panel_auth)
 
-ft.app(target=main)
+if __name__ == "__main__":
+    asyncio.run(ft.app(target=main))

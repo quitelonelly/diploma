@@ -69,6 +69,16 @@ class UserRepository:
 
             return user
         
+    @classmethod
+    async def get_user_role_by_username(cls, username: str):
+        async with new_session() as session:
+            query = select(UserORM.permissions).where(UserORM.username == username)
+            result = await session.execute(query)
+            role = result.scalar_one_or_none()
+
+            return role
+
+        
 class TaskRepository:
     
     @classmethod
@@ -95,6 +105,20 @@ class TaskRepository:
             task_schemas = [Task(**task_dict) for task_dict in task_dicts]
             return task_schemas
         
+    @classmethod
+    async def update_task_name(cls, task_id: int, new_name: str) -> bool:
+        async with new_session() as session:
+            # Получаем задачу по ID
+            task = await session.get(TaskORM, task_id)
+
+            if not task:
+                return False  # Задача не найдена
+
+            # Обновляем название задачи
+            task.taskname = new_name
+            await session.commit()  # Сохраняем изменения в базе данных
+            return True  # Успешное обновление
+
     @classmethod
     async def get_tasks_by_user_id(cls, user_id: int):
         async with new_session() as session:
