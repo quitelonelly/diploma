@@ -100,8 +100,8 @@ async def get_user_role_by_username(username: str) -> str:
 async def update_user(user: Annotated[UserUpdate, Depends()]) -> JSONResponse:
     updated = await UserRepository.update_user(user)
     if updated:
-        return {"User  updated": True}
-    return JSONResponse(status_code=404, content={"message": "User  not found"})
+        return {"User updated": True}
+    return JSONResponse(status_code=404, content={"message": "User not found"})
 
 
 # Запись новой задачи

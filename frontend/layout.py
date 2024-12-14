@@ -1,3 +1,4 @@
+import asyncio
 import flet as ft
 
 
@@ -776,7 +777,12 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                     ft.Row(
                         [
                             title_task,
-                            ft.IconButton(ft.icons.CHECK, icon_color=ft.colors.GREEN, tooltip="Сохранить изменения", on_click=lambda e, title_task=title_task, task_id=task_id: confirm_name_task(title_task, task_id, e))
+                            ft.IconButton(
+                                ft.icons.CHECK, 
+                                icon_color=ft.colors.GREEN, 
+                                tooltip="Сохранить изменения", 
+                                on_click= lambda e: asyncio.run(confirm_name_task(title_task.value, task_id, e))
+                                )
                         ],
                     ),
                     ft.Row(  # Добавляем обе кнопки в один Row

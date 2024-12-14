@@ -1,4 +1,5 @@
 # Импортируем необходимые библиотеки
+import asyncio
 import flet as ft
 import time
 import os
@@ -7,7 +8,7 @@ import httpx
 
 from threading import Timer
 
-from frontend.requests import request_get_user_role, request_add_task
+from frontend.requests import request_get_user_role, request_add_task, request_confirm_name_task
 
 from database.core import (
     get_subtasks, insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
@@ -47,18 +48,15 @@ async def main_screen(page, login, password, token):
     admin_role = await get_user_role()
 
     # Фукнция подтвержления изменения задачи   
-    # async def confirm_name_task(title_task, task_id, e):
-    #     response = await request_confirm_name_task(title_task, task_id)
-    #     if response.status_code == 200:
-    #         print("Название задачи успешно изменено!")
-    #     else:
-    #         print(f"Ошибка при изменении названия задачи: {response.status_code}, {response.text}")
-
-    # Фукнция подтвержления изменения задачи   
-    def confirm_name_task(title_task, task_id, e):
-        update_task(task_id, title_task.value)
-        
-        print(f"Имя " + title_task.value + " сохранено!")
+    async def confirm_name_task(title_task, task_id, e):
+        try:
+            response = await request_confirm_name_task(task_id, title_task)
+            if response.status_code == 200:
+                print("Название задачи успешно изменено!")
+            else:
+                print(f"Ошибка при изменении названия задачи: {response.status_code}, {response.text}")
+        except ValueError:
+            print("Ошибка")
 
     # Функция открывает контейнер задачи    
     def open_task(task_container, e):
@@ -120,7 +118,8 @@ async def main_screen(page, login, password, token):
             on_click=lambda _: close_dialog(add_person_dialog)
         )
 
-        add_person_dialog = create_add_person_dialog(get_users, close_icon, page, insert_person, task_id, get_associated_users, remove_user_from_task)
+        add_person_dialog = create_add_person_dialog(get_users, close_icon, page, insert_person, task_id, 
+                                                     get_associated_users, remove_user_from_task)
         page.dialog = add_person_dialog
         add_person_dialog.open = True
         page.update()
