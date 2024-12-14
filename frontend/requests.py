@@ -33,6 +33,14 @@ async def request_get_user_role(user_login):
 
             return response
       
+async def request_add_task(taskname):
+      async with httpx.AsyncClient() as client:
+            response = await client.post("http://localhost:8000/tasks", params={
+                  "taskname": taskname
+            })
+
+            return response
+      
 async def request_confirm_name_task(task_id, title_task):
       async with httpx.AsyncClient() as client:
             response = await client.put(f"http://localhost:8000/tasks/{task_id}/name", params={
@@ -41,10 +49,14 @@ async def request_confirm_name_task(task_id, title_task):
             
             return response
       
-async def request_add_task(taskname):
+async def request_get_tasks():
       async with httpx.AsyncClient() as client:
-            response = await client.post("http://localhost:8000/tasks", params={
-                  "taskname": taskname
-            })
+            response = await client.get("http://localhost:8000/tasks")
+
+            return response
+      
+async def request_get_my_tasks(user_id: int):
+      async with httpx.AsyncClient() as client:
+            response = await client.get(f"http://localhost:8000/tasks/{user_id}")
 
             return response

@@ -1096,7 +1096,7 @@ def create_panel_my_task(my_task_list, load_my_tasks):
     btn_update = ft.IconButton(
         icon=ft.icons.UPDATE,
         tooltip="Обновить",
-        on_click=lambda e: load_my_tasks()
+        on_click=lambda e: asyncio.run(load_my_tasks())
     )
     
     panel_my_tasks = ft.Container(
@@ -1152,7 +1152,7 @@ def create_panel_done(completed_task_list, load_comp_tasks):
     btn_update = ft.IconButton(
         icon=ft.icons.UPDATE,
         tooltip="Обновить",
-        on_click=lambda e: load_comp_tasks()
+        on_click=lambda e: asyncio.run(load_comp_tasks())
     )
     
     panel_done = ft.Container(

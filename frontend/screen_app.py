@@ -8,7 +8,7 @@ import httpx
 
 from threading import Timer
 
-from frontend.requests import request_get_user_role, request_add_task, request_confirm_name_task
+from frontend.requests import request_get_my_tasks, request_get_user_role, request_add_task, request_confirm_name_task, request_get_tasks
 
 from database.core import (
     get_subtasks, insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
@@ -334,8 +334,6 @@ async def main_screen(page, login, password, token):
             max_lines=5
         )
 
-
-# name, is_checked, process_list, test_list, completed_list, subtask_row, subtask_id, task_id, e
         # Создаем чекбокс для подзадачи
         subtask_checkbox = ft.Checkbox(
             value=False,
@@ -370,112 +368,136 @@ async def main_screen(page, login, password, token):
     # Функция для интервального вызова функции    
     def repeater(interval, function):
         Timer(interval, repeater, [interval, function]).start()
-        function()
+        asyncio.create_task(function())  # Запускаем корутину без asyncio.run()
 
     # Функция для выгрузки задач из БД
-    def load_my_tasks(filtered_task=None):
-        my_task_list.controls.clear()
+    async def load_my_tasks(filtered_task=None):
+        my_task_list.controls.clear()  # Очищаем текущий список задач
 
-        user_id = get_user_id_by_login(login)
+        user_id = get_user_id_by_login(login)  # Получаем ID пользователя
 
-        tasks = filtered_task if filtered_task else get_tasks()
-        subtasks = get_subtasks()
+        # Получаем задачи из API
+        response = await request_get_my_tasks(user_id)  # Используем запрос к API
 
-        for task in tasks:
-            responsible_users = get_responsible_users(task.id)
-            if user_id in responsible_users and not any(container.task_id == task.id for container in my_task_list.controls):
+        if response.status_code == 200:
+            tasks = response.json()  # Предполагаем, что API возвращает список задач в формате JSON
+            print(f"Полученные задачи: {tasks}")  # Отладочное сообщение
 
-                if task.status == "Выполнено":
-                    continue
+            subtasks = get_subtasks()  # Получаем все подзадачи из базы данных
 
-                progress_bar = create_progress_bar()
+            # Фильтруем задачи, если передан параметр filtered_task
+            if filtered_task:
+                tasks = [task for task in tasks if task['taskname'] in filtered_task]
 
-                task_container = create_my_task_container(
-                    task.id, 
-                    task.taskname,  
-                    open_task, 
-                    show_responsible_users_dialog, 
-                    add_file, 
-                    get_files,
-                    progress_bar
-                )
-                    
-                # Находим подзадачи для текущей задачи
-                task_subtasks = [subtask for subtask in subtasks if subtask.id_task == task.id]
+            for task in tasks:
+                responsible_users = get_responsible_users(task['id'])
+                if user_id in responsible_users and not any(container.task_id == task['id'] for container in my_task_list.controls):
 
-                process_list = task_container.in_all_task_list_process
-                test_list = task_container.in_all_task_list_test
-                completed_list = task_container.in_all_task_list_completed
+                    if task['status'] == "Выполнено":
+                        continue
 
-                # Обновляем прогресс-бар
-                total_subtasks = len(task_subtasks)
-                completed_count = sum(1 for subtask in task_subtasks if subtask.status == "Готово")
+                    progress_bar = create_progress_bar()
 
-                # Логирование для отладки
-                print(f"Задача: {task.taskname}, Общее количество подзадач: {total_subtasks}, Выполненные: {completed_count}")
+                    task_container = create_my_task_container(
+                        task['id'], 
+                        task['taskname'],  
+                        open_task, 
+                        show_responsible_users_dialog, 
+                        add_file, 
+                        get_files,
+                        progress_bar
+                    )
 
-                # Обновление значения прогресс-бара
-                if total_subtasks > 0:
-                    progress_bar.value = completed_count / total_subtasks 
-                else:
-                    progress_bar.value = 0
+                    # Находим подзадачи для текущей задачи
+                    task_subtasks = [subtask for subtask in subtasks if subtask.id_task == task['id']]
 
-                # Добавляем подзадачи в соответствующие списки
-                for subtask in task_subtasks:
-                    if subtask.status == "В процессе":
-                        subtask_row = create_subtask_container(subtask.id, task.id, subtask.subtaskname, process_list, test_list, completed_list, progress_bar)
-                        process_list.controls.append(subtask_row)
-                    elif subtask.status == "На проверке":
-                        if admin_role:
-                            subtask_row = create_subtask_container(subtask.id, task.id, subtask.subtaskname, process_list, test_list, completed_list, progress_bar)
-                            test_list.controls.append(subtask_row)
-                        else:
-                            subtask_text_row = ft.Row(
+                    process_list = task_container.in_all_task_list_process
+                    test_list = task_container.in_all_task_list_test
+                    completed_list = task_container.in_all_task_list_completed
+
+                    # Обновляем прогресс-бар
+                    total_subtasks = len(task_subtasks)
+                    completed_count = sum(1 for subtask in task_subtasks if subtask.status == "Готово")
+
+                    # Логирование для отладки
+                    print(f"Задача: {task['taskname']}, Общее количество подзадач: {total_subtasks}, Выполненные: {completed_count}")
+
+                    # Обновление значения прогресс-бара
+                    if total_subtasks > 0:
+                        progress_bar.value = completed_count / total_subtasks 
+                    else:
+                        progress_bar.value = 0
+
+                    # Добавляем подзадачи в соответствующие списки
+                    for subtask in task_subtasks:
+                        if subtask.status == "В процессе":
+                            subtask_row = create_subtask_container(subtask.id, task['id'], subtask.subtaskname, process_list, test_list, completed_list, progress_bar)
+                            process_list.controls.append(subtask_row)
+                        elif subtask.status == "На проверке":
+                            if admin_role:
+                                subtask_row = create_subtask_container(subtask.id, task['id'], subtask.subtaskname, process_list, test_list, completed_list, progress_bar)
+                                test_list.controls.append(subtask_row)
+                            else:
+                                subtask_text_row = ft.Row(
+                                    controls=[
+                                        ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.YELLOW),
+                                        ft.Text(subtask.subtaskname, size=16, width=240, color=ft.colors.WHITE)
+                                    ],
+                                    alignment=ft.MainAxisAlignment.START,
+                                )
+                                test_list.controls.append(subtask_text_row)
+                        elif subtask.status == "Готово":
+                            subtask_compl_row = ft.Row(
                                 controls=[
-                                    ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.YELLOW),
+                                    ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.GREEN),
                                     ft.Text(subtask.subtaskname, size=16, width=240, color=ft.colors.WHITE)
                                 ],
                                 alignment=ft.MainAxisAlignment.START,
                             )
-                            test_list.controls.append(subtask_text_row)
-                    elif subtask.status == "Готово":
-                        subtask_compl_row = ft.Row(
-                            controls=[
-                                ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.GREEN),
-                                ft.Text(subtask.subtaskname, size=16, width=240, color=ft.colors.WHITE)
-                            ],
-                            alignment=ft.MainAxisAlignment.START,
-                        )
-                        completed_list.controls.append(subtask_compl_row)
+                            completed_list.controls.append(subtask_compl_row)
 
-                my_task_list.controls.append(task_container)
+                    my_task_list.controls.append(task_container)
+
+        else:
+            print(f"Ошибка при получении задач: {response.status_code}, {response.text}")
 
         page.update()  # Обновляем страницу после загрузки задач
 
     # Функция для выгрузки задач из БД
-    def load_tasks(filtered_task=None):
+    async def load_tasks(filtered_task=None):
         all_task_list.controls.clear()
 
-        tasks = filtered_task if filtered_task else get_tasks() # Получаем все задачи
-        subtasks = get_subtasks()  # Получаем все подзадачи
+        # Получаем задачи из API
+        response = await request_get_tasks()
+        
+        if response.status_code == 200:
+            tasks = response.json()  # Предполагаем, что API возвращает список задач в формате JSON
+        else:
+            print(f"Ошибка при получении задач: {response.status_code}, {response.text}")
+            return  # Выход из функции, если запрос не удался
+
+        # Если есть фильтрация, используем отфильтрованные задачи
+        if filtered_task:
+            tasks = [task for task in tasks if task['taskname'] in filtered_task]
+
+        subtasks = get_subtasks()  # Получаем все подзадачи из базы данных
 
         for task in tasks:
-
-            if not any(container.task_id == task.id for container in all_task_list.controls):
-                if task.status == "Выполнено":
+            if not any(container.task_id == task['id'] for container in all_task_list.controls):
+                if task['status'] == "Выполнено":
                     continue
 
                 progress_bar = create_progress_bar()    
                 
                 task_container = create_task_container(
-                    task.id, task.taskname, confirm_name_task, open_task,
+                    task['id'], task['taskname'], confirm_name_task, open_task,
                     add_people, all_task_list, page, show_confirm_delete_task_dialog,
                     add_subtask, admin_role, show_responsible_users_dialog,
                     add_file, get_files, progress_bar
                 )
 
                 # Находим подзадачи для текущей задачи
-                task_subtasks = [subtask for subtask in subtasks if subtask.id_task == task.id]
+                task_subtasks = [subtask for subtask in subtasks if subtask.id_task == task['id']]
 
                 process_list = task_container.in_all_task_list_process
                 test_list = task_container.in_all_task_list_test
@@ -486,7 +508,7 @@ async def main_screen(page, login, password, token):
                 completed_count = sum(1 for subtask in task_subtasks if subtask.status == "Готово")
 
                 # Логирование для отладки
-                print(f"Задача: {task.taskname}, Общее количество подзадач: {total_subtasks}, Выполненные: {completed_count}")
+                print(f"Задача: {task['taskname']}, Общее количество подзадач: {total_subtasks}, Выполненные: {completed_count}")
 
                 # Обновление значения прогресс-бара
                 if total_subtasks > 0:
@@ -497,16 +519,12 @@ async def main_screen(page, login, password, token):
                 # Добавляем подзадачи в соответствующие списки
                 for subtask in task_subtasks:
                     if subtask.status == "В процессе":
-                        subtask_row = create_subtask_container(subtask.id, task.id, subtask.subtaskname, process_list, test_list, completed_list, progress_bar)
+                        subtask_row = create_subtask_container(subtask.id, task['id'], subtask.subtaskname, process_list, test_list, completed_list, progress_bar)
                         process_list.controls.append(subtask_row)
                     elif subtask.status == "На проверке":
-                        
-                        # Проверяем является ли пользователь администратором
-                        # Если да, то создаем чекбокс
                         if admin_role:
-                            subtask_row = create_subtask_container(subtask.id, task.id, subtask.subtaskname, process_list, test_list, completed_list, progress_bar)
+                            subtask_row = create_subtask_container(subtask.id, task['id'], subtask.subtaskname, process_list, test_list, completed_list, progress_bar)
                             test_list.controls.append(subtask_row)
-                        # Если нет, то создаем строку с текстом
                         else:
                             subtask_text_row = ft.Row(
                                 controls=[
@@ -517,7 +535,6 @@ async def main_screen(page, login, password, token):
                             )
                             test_list.controls.append(subtask_text_row)
                     elif subtask.status == "Готово":
-                        # Создаем строку для подзадачи и добавляем в список завершенных
                         subtask_compl_row = ft.Row(
                             controls=[
                                 ft.Icon(ft.icons.CIRCLE, size=14, color=ft.colors.GREEN),
@@ -527,23 +544,30 @@ async def main_screen(page, login, password, token):
                         )
                         completed_list.controls.append(subtask_compl_row)
 
-                all_task_list.controls.append(task_container)
+                all_task_list.controls.append (task_container)
 
         page.update()  # Обновляем страницу после загрузки задач
 
     # Функция для выгрузки выполненных задач из БД
-    def load_comp_tasks(filtered_task=None):
+    async def load_comp_tasks(filtered_task=None):
         completed_task_list.controls.clear()  # Очищаем текущий список выполненных задач
 
-        tasks = filtered_task if filtered_task else get_tasks() # Получаем все задачи
-        subtasks = get_subtasks()  # Получаем все подзадачи
+        # Получаем задачи из API
+        response = await request_get_tasks()  # Используем запрос к API
 
-        for task in tasks:
-            if task.status == "Выполнено":  # Проверяем статус задачи
+        if response.status_code == 200:
+            tasks = response.json()  # Предполагаем, что API возвращает список задач в формате JSON
+            print(f"Полученные задачи: {tasks}")  # Отладочное сообщение
+
+            # Фильтруем выполненные задачи
+            completed_tasks = [task for task in tasks if task['status'] == "Выполнено"]
+
+            for task in completed_tasks:
                 completed_list = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
 
                 # Находим подзадачи для текущей задачи
-                task_subtasks = [subtask for subtask in subtasks if subtask.id_task == task.id]
+                subtasks = get_subtasks()  # Получаем все подзадачи из базы данных
+                task_subtasks = [subtask for subtask in subtasks if subtask.id_task == task['id']]
 
                 # Добавляем подзадачи в список выполненных
                 for subtask in task_subtasks:
@@ -559,8 +583,8 @@ async def main_screen(page, login, password, token):
 
                 # Создаем контейнер для выполненной задачи
                 completed_task_container = create_completed_task_container(
-                    task.id,
-                    task.taskname,
+                    task['id'],
+                    task['taskname'],
                     open_task,
                     completed_list,
                     page,
@@ -572,6 +596,9 @@ async def main_screen(page, login, password, token):
 
                 # Добавляем выполненную задачу в список "Выполнено"
                 completed_task_list.controls.append(completed_task_container)
+
+        else:
+            print(f"Ошибка при получении задач: {response.status_code}, {response.text}")
 
         page.update()  # Обновляем страницу после загрузки задач
 
@@ -709,16 +736,22 @@ async def main_screen(page, login, password, token):
             print("Контейнер для выполненной задачи создан:", completed_task_container)
 
             # Удаляем контейнер задачи из списка активных задач
-            all_task_list.controls.remove(task_container)  # Удаляем контейнер задачи
+            task_to_remove = None
+            for task_container in all_task_list.controls:
+                if task_container.task_id == task_id:
+                    task_to_remove = task_container
+                    break
+
+            if task_to_remove:
+                all_task_list.controls.remove(task_to_remove)  # Удаляем контейнер задачи
+            else:
+                print(f"Контейнер с ID {task_id} не найден в списке активных задач.")
 
             # Добавляем выполненную задачу в список "Выполнено"
             completed_task_list.controls.append(completed_task_container)
             print("Задача перемещена в список 'Выполнено'.")
 
             page.update()  # Обновляем страницу после изменений
-
-    # Обновляем интерфейс прогресс-бара
-    page.update()
     
     # Интервальный вызов функций обновления списков задач
     repeater(300, load_my_tasks)
