@@ -60,3 +60,9 @@ async def request_get_my_tasks(user_id: int):
             response = await client.get(f"http://localhost:8000/tasks/{user_id}")
 
             return response
+      
+async def request_get_subtasks(task_id: int):
+      async with httpx.AsyncClient() as client:
+            response = await client.get(f"http://localhost:8000/subtasks/{task_id}")
+
+      return response
