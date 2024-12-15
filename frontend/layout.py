@@ -651,7 +651,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
             ],
         ),
         width=190,
-        on_click=lambda e: add_subtask(task_id, None, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, progress_bar, e),
+        on_click=lambda e: asyncio.run(add_subtask(task_id, None, in_all_task_list_process, in_all_task_list_test, in_all_task_list_completed, progress_bar, e)),
     ) if is_admin else None  # Условие для отображения кнопки
 
     # Создаем кнопку загрузки файла

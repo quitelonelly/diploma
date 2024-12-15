@@ -61,6 +61,14 @@ async def request_get_my_tasks(user_id: int):
 
             return response
       
+async def request_add_subtask(task_id: int, subtask_name: str):
+    async with httpx.AsyncClient() as client:
+        response = await client.post(f"http://localhost:8000/subtasks/{task_id}", params={
+            "subtaskname": subtask_name
+        })
+
+        return response
+      
 async def request_get_subtasks(task_id: int):
       async with httpx.AsyncClient() as client:
             response = await client.get(f"http://localhost:8000/subtasks/{task_id}")

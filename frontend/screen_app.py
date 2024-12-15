@@ -8,7 +8,7 @@ import httpx
 
 from threading import Timer
 
-from frontend.requests import request_get_my_tasks, request_get_user_role, request_add_task, request_confirm_name_task, request_get_tasks, request_get_subtasks
+from frontend.requests import request_add_subtask, request_get_my_tasks, request_get_user_role, request_add_task, request_confirm_name_task, request_get_tasks, request_get_subtasks
 
 from database.core import (
     get_subtasks, insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 
@@ -317,52 +317,57 @@ async def main_screen(page, login, password, token):
         return subtask_row
     
     # Функция добавляет подзадачу в список 
-    def add_subtask(task_id, name, process_list, test_list, completed_list, progress_bar, e):
-
+    async def add_subtask(task_id, name, process_list, test_list, completed_list, progress_bar, e):
         print("Добавлена подзадача")
 
-        # Вставляем подзадачу в базу данных с начальным значением "Новая подзадача"
-        subtask_id = insert_subtask("Новая подзадача", task_id)
+        # Отправляем запрос на добавление подзадачи через API
+        response = await request_add_subtask(task_id, name)
 
-        # Создаем текстовое поле для ввода имени подзадачи
-        subtask_input = ft.TextField(
-            label="Название подзадачи",
-            value=name,
-            border_width=0, 
-            autofocus=True,
-            width=240,
-            max_lines=5
-        )
+        if response.status_code == 200:
+            subtask_id = response.json().get("subtask_id")  # Получаем ID новой подзадачи из ответа
+            print(f"Подзадача успешно добавлена с ID: {subtask_id}")
 
-        # Создаем чекбокс для подзадачи
-        subtask_checkbox = ft.Checkbox(
-            value=False,
-            on_change=lambda e: toggle_subtask(
-                subtask_input.value, e.control.value, process_list, test_list, 
-                completed_list, subtask_row, subtask_id, task_id, e
+            # Создаем текстовое поле для ввода имени подзадачи
+            subtask_input = ft.TextField(
+                label="Название подзадачи",
+                value=name,
+                border_width=0, 
+                autofocus=True,
+                width=240,
+                max_lines=5
             )
-        )
 
-        # Создаем строку, содержащую чекбокс и текстовое поле
-        subtask_row = ft.Row(
-            controls=[
-                subtask_checkbox,
-                subtask_input
-            ],
-            alignment=ft.MainAxisAlignment.START
-        )
+            # Создаем чекбокс для подзадачи
+            subtask_checkbox = ft.Checkbox(
+                value=False,
+                on_change=lambda e: toggle_subtask(
+                    subtask_input.value, e.control.value, process_list, test_list, 
+                    completed_list, subtask_row, subtask_id, task_id, e
+                )
+            )
 
-        # Обработчик для обновления подзадачи в базе данных при изменении текста
-        def on_change_subtask_name(e):
-            update_subtask(subtask_id, subtask_input.value)
+            # Создаем строку, содержащую чекбокс и текстовое поле
+            subtask_row = ft.Row(
+                controls=[
+                    subtask_checkbox,
+                    subtask_input
+                ],
+                alignment=ft.MainAxisAlignment.START
+            )
 
-        # Привязываем обработчик изменения текстового поля
-        subtask_input.on_change = on_change_subtask_name
+            # Обработчик для обновления подзадачи в базе данных при изменении текста
+            def on_change_subtask_name(e):
+                update_subtask(subtask_id, subtask_input.value)
 
-        # Добавляем строку с чекбоксом в список подзадач
-        process_list.controls.append(subtask_row)
+            # Привязываем обработчик изменения текстового поля
+            subtask_input.on_change = on_change_subtask_name
 
-        page.update()  # Обновляем страницу
+            # Добавляем строку с чекбоксом в список подзадач
+            process_list.controls.append(subtask_row)
+
+            page.update()  # Обновляем страницу
+        else:
+            print(f"Ошибка при добавлении подзадачи: {response.status_code}, {response.text}")
 
 
     # Функция для интервального вызова функции    
