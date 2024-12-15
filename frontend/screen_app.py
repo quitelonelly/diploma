@@ -8,7 +8,10 @@ import httpx
 
 from threading import Timer
 
-from frontend.requests import request_add_subtask, request_get_my_tasks, request_get_user_role, request_add_task, request_confirm_name_task, request_get_tasks, request_get_subtasks
+from frontend.requests import (
+    request_add_subtask, request_get_my_tasks, request_get_user_role, request_add_task, request_confirm_name_task, 
+    request_get_tasks, request_get_subtasks
+    )
 
 from database.core import (
     get_subtasks, insert_task, update_task, get_tasks, get_users, insert_person, get_associated_users, remove_user_from_task, 

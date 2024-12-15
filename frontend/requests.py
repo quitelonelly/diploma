@@ -25,6 +25,12 @@ async def request_auth(user_login, user_pass):
 
             return response
       
+async def request_get_users():
+      async with httpx.AsyncClient() as client:
+            response = await client.get("http://localhost:8000/users")
+
+            return response
+      
 async def request_get_user_role(user_login):
       async with httpx.AsyncClient() as client:
             response = await client.get("http://localhost:8000/users/role", params={
@@ -74,3 +80,12 @@ async def request_get_subtasks(task_id: int):
             response = await client.get(f"http://localhost:8000/subtasks/{task_id}")
 
       return response
+
+async def request_add_responsible(task_id: int, user_id: int):
+    async with httpx.AsyncClient() as client:
+        response = await client.post("http://localhost:8000/tasks/responsibles", json={
+            "task_id": task_id,
+            "user_id": user_id 
+        })
+
+        return response
