@@ -10,7 +10,7 @@ from threading import Timer
 
 from frontend.requests import (
     request_add_subtask, request_get_my_tasks, request_get_user_role, request_add_task, request_confirm_name_task, 
-    request_get_tasks, request_get_subtasks
+    request_get_tasks, request_get_subtasks, request_add_responsible, request_delete_responsible, request_get_users
     )
 
 from database.core import (
@@ -86,7 +86,7 @@ async def main_screen(page, login, password, token):
 
     # Функция добавляет пользователя в задачу
     def add_people(task_id, e):
-        show_add_person_dialog(task_id, e)
+        asyncio.run(show_add_person_dialog(task_id, e))
 
     # Функция показывает диалоговое окно с загруженными файлами
     def get_files(task_id, e):
@@ -110,7 +110,7 @@ async def main_screen(page, login, password, token):
         page.update()
     
     # Функция показывает диалоговое окно добавления пользователя в задачу    
-    def show_add_person_dialog(task_id, e):
+    async def show_add_person_dialog(task_id, e):
         def close_dialog(dialog):
             dialog.open = False
             page.update()
@@ -121,8 +121,19 @@ async def main_screen(page, login, password, token):
             on_click=lambda _: close_dialog(add_person_dialog)
         )
 
-        add_person_dialog = create_add_person_dialog(get_users, close_icon, page, insert_person, task_id, 
-                                                     get_associated_users, remove_user_from_task)
+        # Ожидаем результат от request_get_users
+        users = await request_get_users()  # Добавьте await здесь
+
+        add_person_dialog = create_add_person_dialog(
+            users,  # Передаем пользователей в диалог
+            close_icon, 
+            page, 
+            request_add_responsible, 
+            task_id, 
+            get_associated_users, 
+            request_delete_responsible
+        )
+        
         page.dialog = add_person_dialog
         add_person_dialog.open = True
         page.update()

@@ -154,6 +154,21 @@ class TaskRepository:
             except Exception as e:
                 return False
             
+    @classmethod
+    async def delete_responsible(cls, task_id: int, user_id: int) -> bool:
+        async with new_session() as session:
+            try:
+                await session.execute(
+                    responsible_table.delete().where(
+                        (responsible_table.c.id_task == task_id) &
+                        (responsible_table.c.id_user == user_id)
+                    )
+                )
+                await session.commit()
+                return True
+            except Exception as e:
+                return False
+            
 class SubtaskRepository:
 
     @classmethod

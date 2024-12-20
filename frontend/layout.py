@@ -239,42 +239,45 @@ def create_responsible_person_dialog(get_responsible_users, task_id, get_users, 
     
     return responsible_users_dialog
 
-def create_add_person_dialog(get_users, close_icon, page, insert_person, task_id, get_associated_users, remove_user_from_task):
-    users = get_users()
+def create_add_person_dialog(users, close_icon, page, request_add_responsible, task_id, get_associated_users, request_delete_responsible):
     user_list = ft.ListView(spacing=15, padding=ft.padding.all(10), expand=True)
     
-    associated_users = get_associated_users(task_id)
-    
+    associated_users = get_associated_users(task_id)  # Получаем связанных пользователей
+
     for user in users:
+        user_id = user['id']  # Извлекаем ID пользователя
+        username = user['username']  # Извлекаем имя пользователя
+
         icon_button = ft.IconButton(icon=ft.icons.ADD, icon_color=ft.colors.GREEN, tooltip="Добавить")
         icon_button.clicked = False  
         
-        if user[0] in associated_users:
+        if user_id in associated_users:
             icon_button.icon = ft.icons.CHECK_CIRCLE
             icon_button.tooltip = "Удалить"
             icon_button.clicked = True
         
-        def create_toggle_icon(icon_button, user):
+        def create_toggle_icon(icon_button, user_id, username):
             def toggle_icon(e):
                 if icon_button.clicked:
                     icon_button.icon = ft.icons.ADD
                     icon_button.tooltip = "Добавить"
-                    print(f"Удален пользователь {user[1]}")
-                    remove_user_from_task(task_id, user[0])
+                    print(f"Удален пользователь {username}")
+                    asyncio.run(request_delete_responsible(task_id, user_id))
                 else:
                     icon_button.icon = ft.icons.CHECK_CIRCLE
                     icon_button.tooltip = "Удалить"
-                    print(f"Добавлен пользователь {user[1]}")
-                    insert_person(task_id, user[0])
+                    print(f"Добавлен пользователь {username}")
+                    # Здесь вызываем функцию для добавления ответственного
+                    asyncio.run(request_add_responsible(task_id, user_id))  # Добавляем ответственного
                 icon_button.clicked = not icon_button.clicked  
                 page.update()  
             return toggle_icon
 
-        icon_button.on_click = create_toggle_icon(icon_button, user)
+        icon_button.on_click = create_toggle_icon(icon_button, user_id, username)
 
         user_list.controls.append(ft.ListTile(
             leading=icon_button,
-            title=ft.Text(user[1], size=25)
+            title=ft.Text(username, size=25)
         ))
 
     add_person_dialog = ft.AlertDialog(

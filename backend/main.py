@@ -130,6 +130,14 @@ async def assign_responsible(responsible: Annotated[ResponsibleAdd, Depends()]) 
         return {"message": "Responsible assigned successfully"}
     return JSONResponse(status_code=400, content={"message": "Failed to assign responsible"})
 
+# Удаление ответственного за задачу
+@app.delete("/tasks/responsibles", tags=["Задачи 📝"], summary="Удалить ответственного за задачу")
+async def remove_responsible(task_id: int, user_id: int) -> JSONResponse:
+    success = await TaskRepository.delete_responsible(task_id, user_id)
+    if success:
+        return {"message": "Responsible removed successfully"}
+    return JSONResponse(status_code=404, content={"message": "Failed to remove responsible"})
+
 # Обновление названия задачи
 @app.put("/tasks/{task_id}/name", tags=["Задачи 📝"], summary="Обновить название задачи")
 async def update_task_name(task_id: int, new_name: str) -> JSONResponse:

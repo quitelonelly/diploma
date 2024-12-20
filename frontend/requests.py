@@ -26,10 +26,13 @@ async def request_auth(user_login, user_pass):
             return response
       
 async def request_get_users():
-      async with httpx.AsyncClient() as client:
-            response = await client.get("http://localhost:8000/users")
-
-            return response
+    async with httpx.AsyncClient() as client:
+        response = await client.get("http://localhost:8000/users")
+        if response.status_code == 200:
+            return response.json()  # Извлекаем JSON-данные из ответа
+        else:
+            print(f"Ошибка при получении пользователей: {response.status_code}, {response.text}")
+            return []  # Возвращаем пустой список в случае ошибки
       
 async def request_get_user_role(user_login):
       async with httpx.AsyncClient() as client:
@@ -83,9 +86,18 @@ async def request_get_subtasks(task_id: int):
 
 async def request_add_responsible(task_id: int, user_id: int):
     async with httpx.AsyncClient() as client:
-        response = await client.post("http://localhost:8000/tasks/responsibles", json={
+        response = await client.post("http://localhost:8000/tasks/responsibles", params={
             "task_id": task_id,
             "user_id": user_id 
         })
 
         return response
+    
+async def request_delete_responsible(task_id: int, user_id: int):
+     async with httpx.AsyncClient() as client:
+            response = await client.delete("http://localhost:8000/tasks/responsibles", params={
+                "task_id": task_id,
+                "user_id": user_id
+            })
+
+            return response
