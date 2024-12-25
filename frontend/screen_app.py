@@ -10,7 +10,8 @@ from threading import Timer
 
 from frontend.requests import (
     request_add_subtask, request_get_my_tasks, request_get_user_role, request_add_task, request_confirm_name_task, 
-    request_get_tasks, request_get_subtasks, request_add_responsible, request_delete_responsible, request_get_users
+    request_get_tasks, request_get_subtasks, request_add_responsible, request_delete_responsible, request_get_users, 
+    request_update_subtask_status, request_delete_task
     )
 
 from database.core import (
@@ -184,7 +185,7 @@ async def main_screen(page, login, password, token):
             on_click=lambda _: close_dialog(confirm_delete_task_dialog)
         )
 
-        confirm_delete_task_dialog = create_confirm_delete_task_dialog(delete_task, task_id, task_container, all_task_list, page, close_icon)
+        confirm_delete_task_dialog = create_confirm_delete_task_dialog(request_delete_task, task_id, task_container, all_task_list, page, close_icon)
         page.dialog = confirm_delete_task_dialog
         confirm_delete_task_dialog.open = True
         page.update()
@@ -324,7 +325,7 @@ async def main_screen(page, login, password, token):
 
         # Обработчик для обновления подзадачи в базе данных при изменении текста
         def on_change_subtask_name(e):
-            update_subtask(subtask_id, subtask_input.value)
+            asyncio.run(request_update_subtask_status(subtask_id, subtask_input.value))
 
         # Привязываем обработчик изменения текстового поля
         subtask_input.on_change = on_change_subtask_name
@@ -670,7 +671,7 @@ async def main_screen(page, login, password, token):
                     )
 
                     test_list.controls.append(subtask_row)
-                    update_subtask_status(subtask_id, "На проверке")
+                    asyncio.run(request_update_subtask_status(subtask_id, "На проверке"))
 
                 else:
                     subtask_text_row = ft.Row(
@@ -681,7 +682,7 @@ async def main_screen(page, login, password, token):
                         alignment=ft.MainAxisAlignment.START,
                     )
                     test_list.controls.append(subtask_text_row)
-                    update_subtask_status(subtask_id, "На проверке")
+                    asyncio.run(request_update_subtask_status(subtask_id, "На проверке"))
                     print("Подзадача добавлена в список 'На проверке'.")
 
         # Проверяем, находится ли подзадача в списке "На проверке"
@@ -701,7 +702,7 @@ async def main_screen(page, login, password, token):
                 )
                 # Добавляем подзадачу в список "Готово"
                 completed_list.controls.append(subtask_text_completed_row)
-                update_subtask_status(subtask_id, "Готово")
+                asyncio.run(request_update_subtask_status(subtask_id, "Готово"))
                 print("Подзадача добавлена в список 'Готово'.")
 
         else:

@@ -340,7 +340,7 @@ def create_update_profile_dialog(close_icon, new_username_input, new_password_in
     )
     return update_dialog
 
-def create_confirm_delete_task_dialog(delete_task, task_id, task_container, all_task_list, page, close_icon):
+def create_confirm_delete_task_dialog(request_delete_task, task_id, task_container, all_task_list, page, close_icon):
     confirm_delete_task_dialog = ft.AlertDialog(
         modal=False,
         content=ft.Container(
@@ -359,7 +359,7 @@ def create_confirm_delete_task_dialog(delete_task, task_id, task_container, all_
                     ft.Container(  # Container for buttons
                         content=ft.Row(
                             [
-                                ft.CupertinoFilledButton("ДА", expand=True, on_click=lambda e: delete_task(task_id, task_container, all_task_list, page, confirm_delete_task_dialog)),
+                                ft.CupertinoFilledButton("ДА", expand=True, on_click=lambda e: asyncio.run(request_delete_task(task_id, task_container, all_task_list, page, confirm_delete_task_dialog))),
                                 ft.CupertinoFilledButton("НЕТ", expand=True, on_click=lambda e: close_icon.on_click(e)),
                             ],
                             alignment=ft.MainAxisAlignment.CENTER,

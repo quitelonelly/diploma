@@ -115,6 +115,13 @@ async def add_task(task: Annotated[TaskAdd, Depends()]) -> JSONResponse:
 async def get_tasks() -> list[Task]:
     tasks = await TaskRepository.get_tasks()
     return tasks
+
+@app.delete("/tasks/{task_id}", tags=["Задачи 📝"], summary="Удалить задачу")
+async def delete_task(task_id: int) -> JSONResponse:
+    deleted = await TaskRepository.delete_task(task_id)
+    if deleted:
+        return {"message": "Task deleted successfully"}
+    return JSONResponse(status_code=404, content={"message": "Task not found"})
     
 # Получение задач по пользователю
 @app.get("/tasks/{user_id}", tags=["Задачи 📝"], summary="Получить задачи по пользователю")
@@ -125,18 +132,27 @@ async def get_tasks_by_user_id(user_id: int) -> list[Task]:
 # Запись ответственного за задачу
 @app.post("/tasks/responsibles", tags=["Задачи 📝"], summary="Добавить ответственного за задачу")
 async def assign_responsible(responsible: Annotated[ResponsibleAdd, Depends()]) -> JSONResponse:
-    success = await TaskRepository.add_responsible(responsible)
-    if success:
-        return {"message": "Responsible assigned successfully"}
-    return JSONResponse(status_code=400, content={"message": "Failed to assign responsible"})
-
+    try:
+        success = await TaskRepository.add_responsible(responsible)
+        if success:
+            return {"message": "Responsible assigned successfully"}
+        return JSONResponse(status_code=400, content={"message": "Failed to assign responsible"})
+    except Exception as e:
+        print(f"Ошибка при добавлении исполнителя: {e}")  # Логируем ошибку
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+    
 # Удаление ответственного за задачу
-@app.delete("/tasks/responsibles", tags=["Задачи 📝"], summary="Удалить ответственного за задачу")
+@app.delete("/tasks/responsibles/{task_id}/{user_id}", tags=["Задачи 📝"], summary="Удалить ответственного за задачу")
 async def remove_responsible(task_id: int, user_id: int) -> JSONResponse:
-    success = await TaskRepository.delete_responsible(task_id, user_id)
-    if success:
-        return {"message": "Responsible removed successfully"}
-    return JSONResponse(status_code=404, content={"message": "Failed to remove responsible"})
+    print(f"Удаление исполнителя: task_id={task_id}, user_id={user_id}")
+    try:
+        success = await TaskRepository.delete_responsible(task_id, user_id)
+        if success:
+            return {"message": "Responsible removed successfully"}
+        return JSONResponse(status_code=404, content={"message": "Failed to remove responsible"})
+    except Exception as e:
+        print(f"Ошибка при удалении исполнителя: {e}")  # Логируем ошибку
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
 # Обновление названия задачи
 @app.put("/tasks/{task_id}/name", tags=["Задачи 📝"], summary="Обновить название задачи")
@@ -157,3 +173,11 @@ async def add_subtask(task_id: int, subtask: Annotated[SubtaskAdd, Depends()]) -
 async def get_subtasks_by_task_id(task_id: int) -> list[Subtask]:
     subtasks = await SubtaskRepository.get_subtasks(task_id)
     return subtasks
+
+# Обновление статуса подзадачи
+@app.put("/subtasks/{subtask_id}/status", tags=["Задачи 📝"], summary="Обновить статус подзадачи")
+async def update_subtask_status(subtask_id: int, new_status: str) -> JSONResponse:
+    updated = await SubtaskRepository.update_subtask_status(subtask_id, new_status)
+    if updated:
+        return {"message": "Subtask status updated successfully"}
+    return JSONResponse(status_code=404, content={"message": "Subtask not found"})

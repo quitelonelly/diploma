@@ -63,6 +63,20 @@ async def request_get_tasks():
             response = await client.get("http://localhost:8000/tasks")
 
             return response
+    
+async def request_delete_task(task_id, task_container, all_task_list, page, dialog):
+     async with httpx.AsyncClient() as client:
+            response = await client.delete(f"http://localhost:8000/tasks/{task_id}")
+
+            # Закрываем диалоговое окно
+            dialog.open = False
+            page.update()
+            
+            # Удаляем задачу из списка 
+            all_task_list.controls.remove(task_container)
+            page.update()
+
+            return response
       
 async def request_get_my_tasks(user_id: int):
       async with httpx.AsyncClient() as client:
@@ -84,6 +98,14 @@ async def request_get_subtasks(task_id: int):
 
       return response
 
+async def request_update_subtask_status(subtask_id: int, status: str):
+      async with httpx.AsyncClient() as client:
+            response = await client.put(f"http://localhost:8000/subtasks/{subtask_id}/status", params={
+                "new_status": status
+            })
+
+            return response
+
 async def request_add_responsible(task_id: int, user_id: int):
     async with httpx.AsyncClient() as client:
         response = await client.post("http://localhost:8000/tasks/responsibles", params={
@@ -95,9 +117,6 @@ async def request_add_responsible(task_id: int, user_id: int):
     
 async def request_delete_responsible(task_id: int, user_id: int):
      async with httpx.AsyncClient() as client:
-            response = await client.delete("http://localhost:8000/tasks/responsibles", params={
-                "task_id": task_id,
-                "user_id": user_id
-            })
+            response = await client.delete(f"http://localhost:8000/tasks/responsibles/{task_id}/{user_id}")
 
             return response

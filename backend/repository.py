@@ -1,9 +1,9 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from fastapi import HTTPException
 
 from database.db import new_session
-from database.models import responsible_table, subtask_table
+from database.models import responsible_table, subtask_table, files_table
 from backend.shemas import ResponsibleAdd, Task, TaskAdd, TaskORM, User, UserAdd, UserORM, Subtask, SubtaskAdd, SubtaskORM, UserUpdate
 
 from backend.utils import hash_password, verify_password
@@ -106,6 +106,30 @@ class TaskRepository:
             return task_schemas
         
     @classmethod
+    async def delete_task(cls, task_id: int) -> bool:
+        async with new_session() as session:
+            try:
+                # Удаляем связи с таблицей responsible
+                await session.execute(delete(responsible_table).where(responsible_table.c.id_task == task_id))
+            
+                # Удаляем подзадачи
+                await session.execute(delete(subtask_table).where(subtask_table.c.id_task == task_id))
+                
+                # Удаляем файлы (если у вас есть таблица для файлов)
+                await session.execute(delete(files_table).where(files_table.c.id_task == task_id))
+
+                # Удаляем задачу
+                task = await session.get(TaskORM, task_id)
+                await session.delete(task)
+                await session.commit()
+
+                return True  # Успешное удаление
+            except Exception as e:
+                await session.rollback()  # Откат транзакции в случае ошибки
+
+                return False
+        
+    @classmethod
     async def update_task_name(cls, task_id: int, new_name: str) -> bool:
         async with new_session() as session:
             # Получаем задачу по ID
@@ -139,21 +163,25 @@ class TaskRepository:
     async def add_responsible(cls, data: ResponsibleAdd) -> bool:
         async with new_session() as session:
             try:
+                # Проверяем, существует ли задача
+                task = await session.get(TaskORM, data.task_id)
+                if not task:
+                    print(f"Задача с ID {data.task_id} не найдена.")  # Логируем ошибку
+                    return False  # Задача не найдена
+
                 new_responsible = {
                     "id_task": data.task_id,
                     "id_user": data.user_id
                 }
-
-                result = await session.execute(responsible_table.insert().values(new_responsible))
+                await session.execute(responsible_table.insert().values(new_responsible))
                 await session.commit()
-
-                if result.rowcount == 0:
-                    return False
                 
-                return True
+                # Проверяем, была ли добавлена запись
+                return True # Возвращаем True, если была добавлена хотя бы одна запись
             except Exception as e:
+                print(f"Ошибка при добавлении ответственного: {e}")  # Логируем ошибку
                 return False
-            
+
     @classmethod
     async def delete_responsible(cls, task_id: int, user_id: int) -> bool:
         async with new_session() as session:
@@ -165,8 +193,9 @@ class TaskRepository:
                     )
                 )
                 await session.commit()
-                return True
+                return True # Возвращаем True, если была удалена хотя бы одна запись
             except Exception as e:
+                print(f"Ошибка при удалении ответственного: {e}")  # Логируем ошибку
                 return False
             
 class SubtaskRepository:
@@ -199,6 +228,18 @@ class SubtaskRepository:
             ]
 
             return subtask_responses
+        
+    @classmethod
+    async def update_subtask_status(cls, subtask_id: int, new_status: str) -> bool:
+        async with new_session() as session:
+            # Получаем подзадачу по ID
+            subtask = await session.get(SubtaskORM, subtask_id)
+
+            # Обновляем статус подзадачи
+            subtask.status = new_status
+            await session.commit()  # Сохраняем изменения в базе данных
+
+            return True  # Успешное обновление
         
 def user_models_to_dict(user_model: UserORM) -> dict:
     return {
