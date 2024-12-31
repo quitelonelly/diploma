@@ -70,3 +70,16 @@ class SubtaskORM(Model):
 class Subtask(SubtaskAdd):
     status: str
     id: int
+
+class FileORM(Model):
+    __tablename__ = "files"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    id_task: Mapped[int] = mapped_column(ForeignKey("tasks.id"))
+    file_name: Mapped[str]
+    file_data: Mapped[bytes]
+
+class FileAdd(BaseModel):
+    task_id: int
+    file_name: str
+    file_data: bytes

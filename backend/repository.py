@@ -1,10 +1,10 @@
 from sqlalchemy import delete, select
 
-from fastapi import HTTPException
+from fastapi import File, HTTPException
 
 from database.db import new_session
 from database.models import responsible_table, subtask_table, files_table
-from backend.shemas import ResponsibleAdd, Task, TaskAdd, TaskORM, User, UserAdd, UserORM, Subtask, SubtaskAdd, SubtaskORM, UserUpdate
+from backend.shemas import FileAdd, FileORM, ResponsibleAdd, Task, TaskAdd, TaskORM, User, UserAdd, UserORM, Subtask, SubtaskAdd, SubtaskORM, UserUpdate
 
 from backend.utils import hash_password, verify_password
 
@@ -198,6 +198,51 @@ class TaskRepository:
                 print(f"Ошибка при удалении ответственного: {e}")  # Логируем ошибку
                 return False
             
+    @classmethod
+    async def add_file(cls, file_data: FileAdd) -> int:
+        async with new_session() as session:
+            file_entry = {
+                "id_task": file_data.task_id,
+                "file_name": file_data.file_name,
+                "file_data": file_data.file_data
+            }
+            await session.execute(files_table.insert().values(file_entry))
+            await session.commit()
+
+            return file_entry["id_task"]
+        
+    @classmethod
+    async def get_files_by_task_id(cls, task_id: int):
+        async with new_session() as session:
+            query = select(FileORM).where(FileORM.id_task == task_id)
+            result = await session.execute(query)
+            file_models = result.scalars().all()
+            
+            return file_models  # Возвращаем список объектов файлов
+
+    @classmethod
+    async def get_file_by_id(cls, file_id: int):
+        async with new_session() as session:
+            query = select(FileORM).where(FileORM.id == file_id)
+            result = await session.execute(query)
+            file_model = result.scalar_one_or_none()
+
+            return file_model  # Возвращаем объект файла или None, если не найден
+        
+    @classmethod
+    async def delete_file(cls, file_id: int) -> bool:
+        async with new_session() as session:
+            try:
+                await session.execute(delete(FileORM).where(FileORM.id == file_id))
+                await session.commit()
+
+                return True  # Возвращаем True, если была удалена хотя бы одна запись
+            except Exception as e:
+                print(f"Ошибка при удалении файла: {e}")  # Логируем ошибку
+                
+                return False
+        
+            
 class SubtaskRepository:
 
     @classmethod
@@ -261,4 +306,11 @@ def subtask_models_to_dict(subtask_model: SubtaskORM) -> dict:
         'id': subtask_model.id,
         'subtaskname': subtask_model.subtaskname,
         'status': subtask_model.status,
+    }
+
+def file_models_to_dict(file_model: FileORM) -> dict:
+    return {
+        'id': file_model.id,
+        'file_name': file_model.file_name,
+        'file_data': file_model.file_data,
     }

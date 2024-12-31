@@ -3,15 +3,14 @@ import asyncio
 import flet as ft
 import time
 import os
-import platform
-import httpx
 
 from threading import Timer
 
 from frontend.requests import (
     request_add_subtask, request_get_my_tasks, request_get_user_role, request_add_task, request_confirm_name_task, 
     request_get_tasks, request_get_subtasks, request_add_responsible, request_delete_responsible, request_get_users, 
-    request_update_subtask_status, request_delete_task
+    request_update_subtask_status, request_delete_task, request_add_file, request_get_files_by_task_id, request_get_file,
+    request_delete_file
     )
 
 from database.core import (
@@ -151,7 +150,7 @@ async def main_screen(page, login, password, token):
             on_click=lambda _: close_dialog(files_dialog)
         )
 
-        files_dialog = create_files_dialog(task_id, download_file, get_files_by_task, close_icon, delete_file, page)
+        files_dialog = create_files_dialog(task_id, download_file, request_get_files_by_task_id, close_icon, request_delete_file, page)
         page.dialog = files_dialog
         files_dialog.open = True
         page.update()
@@ -221,29 +220,27 @@ async def main_screen(page, login, password, token):
         update_profile_dialog.open = True
         page.update()
 
-    def download_file(file_data, file_name):
+    async def download_file(file_id: int, file_name: str):
+        # Запрашиваем файл по ID
+        file_data = await request_get_file(file_id)
+        
+        if file_data is not None:
+            # Определяем путь к папке "Загрузки"
+            save_path = os.path.join(os.path.expanduser("~"), "Загрузки", file_name)
 
-        # Определяем путь к папке "Загрузки"
-        if platform.system() == "Windows":
-            # Для Windows
-            save_path = os.path.join(os.path.expanduser("~"), "Загрузки", file_name)
-        elif platform.system() == "Darwin":
-            # Для macOS
-            save_path = os.path.join(os.path.expanduser("~"), "Загрузки", file_name)
+            # Записываем данные файла в файл
+            with open(save_path, 'wb') as f:
+                f.write(file_data)
+
+            print(f"Файл '{file_name}' успешно загружен в '{save_path}'")
         else:
-            # Для Linux и других Unix-подобных систем
-            save_path = os.path.join(os.path.expanduser("~"), "Загрузки", file_name)
-        # Записываем данные файла в файл
-        with open(save_path, 'wb') as f:
-            f.write(file_data)
-
-        print(f"Файл '{file_name}' успешно загружен в '{save_path}'")
+            print(f"Не удалось загрузить файл с ID {file_id}.")
 
     def add_file(file_container, task_id, e):
         print("Открываем файл...")
 
         # Инициализация FilePicker
-        file_picker = ft.FilePicker(on_result=lambda e: pick_files_result(e, file_container, task_id))
+        file_picker = ft.FilePicker(on_result=lambda e: asyncio.run(pick_files_result(e, file_container, task_id)))
 
         # Добавляем FilePicker в overlay
         page.overlay.append(file_picker)
@@ -253,15 +250,22 @@ async def main_screen(page, login, password, token):
         # Теперь, когда FilePicker добавлен, вызываем pick_files
         file_picker.pick_files(allow_multiple=False)
 
-    def pick_files_result(e: ft.FilePickerResultEvent, file_container, task_id):
+    async def pick_files_result(e: ft.FilePickerResultEvent, file_container, task_id):
         if e.files:
             file_path = e.files[0].path  # Получаем полный путь к файлу
             file_name = os.path.basename(file_path)  # Извлекаем только имя файла
 
-            # Читаем файл в бинарном формате
-            with open(file_path, 'rb') as file:
-                file_data = file.read()  # Читаем файл в бинарном формате
-                insert_file(task_id, file_name, file_data)  # Сохраняем файл в базе данных
+            # Теперь вызываем запрос на добавление файла
+            with open(file_path, 'rb') as f:
+                file_data = f.read()  # Читаем данные файла
+
+            # Теперь вызываем запрос на добавление файла
+            response = await request_add_file(task_id, file_name, file_data)  # Передаем имя файла и данные
+
+            if response.status_code == 201:
+                print("Файл успешно загружен!")
+            else:
+                print(f"Ошибка при загрузке файла: {response.status_code}, {response.text}")
 
             # Обновляем интерфейс, чтобы отобразить имя файла
             file_container.update()  # Обновление контейнера файла

@@ -1,3 +1,4 @@
+import io
 import os
 
 from dotenv import load_dotenv
@@ -6,12 +7,13 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, status, Security, Body
-from fastapi.responses import JSONResponse
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status, Security, Body
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+import urllib
 
 from backend.repository import TaskRepository, UserRepository, SubtaskRepository
-from backend.shemas import ResponsibleAdd, Task, TaskAdd, User, UserAdd, Subtask, SubtaskAdd, UserUpdate
+from backend.shemas import FileAdd, ResponsibleAdd, Task, TaskAdd, User, UserAdd, Subtask, SubtaskAdd, UserUpdate
 from backend.utils import hash_password, verify_password
 
 
@@ -181,3 +183,56 @@ async def update_subtask_status(subtask_id: int, new_status: str) -> JSONRespons
     if updated:
         return {"message": "Subtask status updated successfully"}
     return JSONResponse(status_code=404, content={"message": "Subtask not found"})
+
+# Добавление нового файла
+@app.post("/files", tags=["Файлы 📁"], summary="Загрузить файл")
+async def upload_file(file: UploadFile = File(...), task_id: int = Body(...)) -> JSONResponse:
+    try:
+        file_data = await file.read()  # Читаем содержимое файла
+        file_upload = FileAdd(task_id=task_id, file_name=file.filename, file_data=file_data)
+        
+        # Сохраняем файл в репозитории
+        await TaskRepository.add_file(file_upload)
+        
+        return JSONResponse(status_code=201, content={"message": "File uploaded successfully"})
+    except Exception as e:
+        print(f"Ошибка при загрузке файла: {e}")  # Логируем ошибку
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+    
+# Получение всех файлов по ID задачи
+@app.get("/tasks/{task_id}/files", tags=["Файлы 📁"], summary="Получить все файлы по ID задачи")
+async def get_files_by_task_id(task_id: int) -> JSONResponse:
+    files = await TaskRepository.get_files_by_task_id(task_id)
+    if files:
+        return JSONResponse(content=[{
+            "id": file.id,
+            "file_name": file.file_name,
+        } for file in files])
+    
+    return JSONResponse(status_code=404, content={"message": "No files found for this task"})
+
+# Получение файла по ID
+@app.get("/files/{file_id}", tags=["Файлы 📁"], summary="Скачать файл по ID")
+async def download_file(file_id: int) -> StreamingResponse:
+    file_data = await TaskRepository.get_file_by_id(file_id)
+    if file_data:
+        # Кодируем имя файла для заголовка
+        encoded_file_name = urllib.parse.quote(file_data.file_name)
+
+        return StreamingResponse(
+            io.BytesIO(file_data.file_data),
+            media_type="application/octet-stream",
+            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_file_name}"}
+        )
+
+    raise HTTPException(status_code=404, detail="File not found")
+
+# Удаление файла по ID
+@app.delete("/files/{file_id}", tags=["Файлы 📁"], summary="Удалить файл по ID")
+async def delete_file(file_id: int) -> JSONResponse:
+    success = await TaskRepository.delete_file(file_id)
+    if success:
+        return {"message": "File deleted successfully"}
+    return JSONResponse(status_code=404, content={"message": "File not found"})
+
+

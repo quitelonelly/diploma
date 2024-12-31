@@ -1,3 +1,4 @@
+from fastapi import UploadFile
 import httpx
 
 async def request_reg(user_login, user_pass):
@@ -120,3 +121,43 @@ async def request_delete_responsible(task_id: int, user_id: int):
             response = await client.delete(f"http://localhost:8000/tasks/responsibles/{task_id}/{user_id}")
 
             return response
+     
+async def request_add_file(task_id: int, file_name: str, file_data: bytes):
+    async with httpx.AsyncClient() as client:
+        # Используем multipart/form-data для загрузки файла
+        files = {'file': (file_name, file_data, 'application/octet-stream')}
+        response = await client.post("http://localhost:8000/files", files=files, data={"task_id": task_id})
+
+        return response
+    
+async def request_get_files_by_task_id(task_id: int):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"http://localhost:8000/tasks/{task_id}/files")
+        
+        if response.status_code == 200:
+            return response.json()  # Возвращаем JSON-данные, если запрос успешен
+        else:
+            print(f"Ошибка при получении файлов: {response.status_code}, {response.text}")
+            return []  # Возвращаем пустой список в случае ошибки
+        
+async def request_get_file(file_id: int):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(f"http://localhost:8000/files/{file_id}")
+
+            # Проверяем статус ответа
+            response.raise_for_status()  # Это вызовет исключение для статусов 4xx и 5xx
+
+            return response.content  # Возвращаем содержимое файла, если запрос успешен
+        except httpx.HTTPStatusError as e:
+            print(f"Ошибка при получении файла: {e.response.status_code}, {e.response.text}")
+            return None  # Возвращаем None в случае ошибки
+        except Exception as e:
+            print(f"Произошла ошибка: {str(e)}")
+            return None  # Возвращаем None в случае других ошибок
+        
+async def request_delete_file(file_id: int):
+    async with httpx.AsyncClient() as client:
+        response = await client.delete(f"http://localhost:8000/files/{file_id}")
+
+        return response

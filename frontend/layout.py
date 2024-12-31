@@ -395,7 +395,7 @@ def create_file_container(task_id, get_files):
 
     return file_container
 
-def create_files_dialog(task_id, download_file, get_files_by_task, close_icon, delete_file, page):
+def create_files_dialog(task_id, download_file, request_get_files_by_task_id, close_icon, request_delete_file, page):
     files_list = ft.ListView(spacing=15, padding=ft.padding.all(10), expand=True)
 
     files_dialog = ft.AlertDialog(
@@ -416,30 +416,30 @@ def create_files_dialog(task_id, download_file, get_files_by_task, close_icon, d
     )
 
     # Функция для обновления списка файлов
-    def update_file_list():
+    async def update_file_list():
         files_list.controls.clear()  # Очищаем текущий список
-        files = get_files_by_task(task_id)  # Получаем обновленный список файлов
+        files = await request_get_files_by_task_id(task_id)  # Получаем обновленный список файлов
         for file in files:
             files_list.controls.append(ft.ListTile(
-                title=ft.Text(file.file_name),
+                title=ft.Text(file['file_name']),  # Используйте ключ словаря
                 leading=ft.Icon(ft.icons.FILE_PRESENT),
                 trailing=ft.IconButton(
                     icon=ft.icons.DELETE,
                     icon_color=ft.colors.RED,
                     tooltip="Удалить файл",
-                    on_click=lambda e, file_id=file.id: delete_and_update(file_id)  # Передаем правильный file_id
+                    on_click=lambda e, file_id=file['id']: delete_and_update(file_id)  # Используйте ключ словаря
                 ),
-                on_click=lambda e, file_data=file.file_data, file_name=file.file_name: download_file(file_data, file_name)
+                on_click=lambda e, file_id=file['id'], file_name=file['file_name']: asyncio.run(download_file(file_id, file_name))  # Передаем имя файла
             ))
         page.update()  # Обновляем ListView после добавления новых элементов
 
     # Функция для удаления файла и обновления списка
     def delete_and_update(file_id):
-        delete_file(file_id)  # Удаляем файл из базы данных
-        update_file_list()  # Обновляем список файлов в интерфейсе
+        asyncio.run(request_delete_file(file_id)) # Удаляем файл из базы данных
+        asyncio.run(update_file_list() ) # Обновляем список файлов в интерфейсе
 
     # Обновляем список файлов после открытия диалога
-    update_file_list()
+    asyncio.run(update_file_list())
 
     return files_dialog
 
