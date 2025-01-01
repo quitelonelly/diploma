@@ -116,6 +116,12 @@ async def request_add_responsible(task_id: int, user_id: int):
 
         return response
     
+async def request_get_responsible_by_task(task_id: int):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"http://localhost:8000/tasks/{task_id}/responsibles")
+
+        return response
+    
 async def request_delete_responsible(task_id: int, user_id: int):
      async with httpx.AsyncClient() as client:
             response = await client.delete(f"http://localhost:8000/tasks/responsibles/{task_id}/{user_id}")

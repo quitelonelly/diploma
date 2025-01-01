@@ -181,6 +181,18 @@ class TaskRepository:
             except Exception as e:
                 print(f"Ошибка при добавлении ответственного: {e}")  # Логируем ошибку
                 return False
+            
+    @classmethod
+    async def get_responsibles_by_task_id(cls, task_id: int):
+        async with new_session() as session:
+            query = (
+                select(UserORM.username)  # Извлекаем имя пользователя
+                .join(responsible_table, UserORM.id == responsible_table.c.id_user)  # Соединяем с таблицей исполнителей
+                .where(responsible_table.c.id_task == task_id)
+            )
+            result = await session.execute(query)
+
+            return result.scalars().all()  # Возвращаем список имен исполнителей
 
     @classmethod
     async def delete_responsible(cls, task_id: int, user_id: int) -> bool:

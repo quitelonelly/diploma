@@ -122,7 +122,7 @@ async def main_screen(page, login, password, token):
         )
 
         # Ожидаем результат от request_get_users
-        users = await request_get_users()  # Добавьте await здесь
+        users = await request_get_users()  # Получаем пользователей через API
 
         add_person_dialog = create_add_person_dialog(
             users,  # Передаем пользователей в диалог

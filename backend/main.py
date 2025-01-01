@@ -131,6 +131,13 @@ async def get_tasks_by_user_id(user_id: int) -> list[Task]:
     tasks = await TaskRepository.get_tasks_by_user_id(user_id)
     return tasks
 
+@app.get("/tasks/{task_id}/responsibles", tags=["Задачи 📝"], summary="Получить исполнителей по ID задачи")
+async def get_responsibles_by_task_id(task_id: int) -> JSONResponse:
+    responsibles = await TaskRepository.get_responsibles_by_task_id(task_id)
+    if responsibles:
+        return JSONResponse(content={"responsibles": responsibles})
+    return JSONResponse(status_code=404, content={"message": "No responsibles found for this task"})
+
 # Запись ответственного за задачу
 @app.post("/tasks/responsibles", tags=["Задачи 📝"], summary="Добавить ответственного за задачу")
 async def assign_responsible(responsible: Annotated[ResponsibleAdd, Depends()]) -> JSONResponse:
