@@ -167,3 +167,9 @@ async def request_delete_file(file_id: int):
         response = await client.delete(f"http://localhost:8000/files/{file_id}")
 
         return response
+    
+async def request_seacrh_task(query: str):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"http://localhost:8000/tasks/search?query={query}")
+
+        return response

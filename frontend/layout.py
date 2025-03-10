@@ -207,17 +207,14 @@ def create_profile_dialog(close_icon, login_tile_container, password_tile_contai
         )
     return profile_dialog
 
-def create_responsible_person_dialog(get_responsible_users, task_id, get_users, close_icon):
-    # Получаем логины пользователей, связанных с задачей
-    responsible_users = get_responsible_users(task_id)
-    users = [user.username for user in get_users() if user.id in responsible_users]
-    
-    # Создаем список логинов
+def create_responsible_person_dialog(responsible_users, close_icon):
+    # Создаем список логинов исполнителей
     users_list = ft.ListView(spacing=15, padding=ft.padding.all(10), expand=True)
-    for user in users:
+    
+    for username in responsible_users:
         users_list.controls.append(ft.ListTile(
             leading=ft.Icon(ft.icons.PERSON),
-            title=ft.Text(user, size=25)
+            title=ft.Text(username, size=25)  # Используем имя пользователя
         ))
     
     responsible_users_dialog = ft.AlertDialog(
@@ -239,22 +236,19 @@ def create_responsible_person_dialog(get_responsible_users, task_id, get_users, 
     
     return responsible_users_dialog
 
-def create_add_person_dialog(users, close_icon, page, request_add_responsible, task_id, get_associated_users, request_delete_responsible):
+def create_add_person_dialog(users, close_icon, page, request_add_responsible, task_id, associated_users, request_delete_responsible):
     user_list = ft.ListView(spacing=15, padding=ft.padding.all(10), expand=True)
     
-    associated_users = get_associated_users(task_id)  # Получаем связанных пользователей
-
     for user in users:
         user_id = user['id']  # Извлекаем ID пользователя
         username = user['username']  # Извлекаем имя пользователя
 
         icon_button = ft.IconButton(icon=ft.icons.ADD, icon_color=ft.colors.GREEN, tooltip="Добавить")
-        icon_button.clicked = False  
+        icon_button.clicked = username in associated_users  # Устанавливаем состояние кнопки в зависимости от связанных пользователей
         
-        if user_id in associated_users:
+        if icon_button.clicked:
             icon_button.icon = ft.icons.CHECK_CIRCLE
             icon_button.tooltip = "Удалить"
-            icon_button.clicked = True
         
         def create_toggle_icon(icon_button, user_id, username):
             def toggle_icon(e):
@@ -267,7 +261,6 @@ def create_add_person_dialog(users, close_icon, page, request_add_responsible, t
                     icon_button.icon = ft.icons.CHECK_CIRCLE
                     icon_button.tooltip = "Удалить"
                     print(f"Добавлен пользователь {username}")
-                    # Здесь вызываем функцию для добавления ответственного
                     asyncio.run(request_add_responsible(task_id, user_id))  # Добавляем ответственного
                 icon_button.clicked = not icon_button.clicked  
                 page.update()  
@@ -595,7 +588,7 @@ def create_my_task_container(task_id, task_name, open_task, show_responsible_use
                                     ft.Icon(ft.icons.PEOPLE)
                                 ],
                             ),
-                            on_click=lambda e: show_responsible_users_dialog(task_id, e),
+                            on_click=lambda e: asyncio.run(show_responsible_users_dialog(task_id, e)),
                         ),
 
                         progress_bar,
@@ -860,7 +853,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                                         ft.Icon(ft.icons.PEOPLE)
                                     ],
                                 ),
-                                on_click=lambda e: show_responsible_users_dialog(task_id, e),
+                                on_click=lambda e: asyncio.run(show_responsible_users_dialog(task_id, e)),
                             ),
                             
                             progress_bar,
@@ -1020,7 +1013,7 @@ def create_completed_task_container(task_id, task_name, open_task, completed_lis
                                         ft.Icon(ft.icons.PEOPLE)
                                     ],
                                 ),
-                                on_click=lambda e: show_responsible_users_dialog(task_id, e),
+                                on_click=lambda e: asyncio.run(show_responsible_users_dialog(task_id, e)),
                             ),      
 
                         ft.TextButton(

@@ -253,6 +253,16 @@ class TaskRepository:
                 print(f"Ошибка при удалении файла: {e}")  # Логируем ошибку
                 
                 return False
+            
+    @classmethod
+    async def search_tasks(cls, query: str):
+        print(f"Поиск задач с запросом: {query}")  # Логируем запрос
+        async with new_session() as session:
+            query = select(TaskORM).where(TaskORM.taskname.ilike(f"%{query}%"))
+            result = await session.execute(query)
+            task_models = result.scalars().all()
+            task_dicts = [task_models_to_dict(task_model) for task_model in task_models]
+            return task_dicts  # Возвращаем список задач
         
             
 class SubtaskRepository:

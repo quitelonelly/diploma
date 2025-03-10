@@ -112,6 +112,14 @@ async def add_task(task: Annotated[TaskAdd, Depends()]) -> JSONResponse:
     task_id = await TaskRepository.add_task(task)
     return {"Task added": True, "task_id": task_id}
 
+# Обновление названия задачи
+@app.put("/tasks/{task_id}/name", tags=["Задачи 📝"], summary="Обновить название задачи")
+async def update_task_name(task_id: int, new_name: str) -> JSONResponse:
+    updated = await TaskRepository.update_task_name(task_id, new_name)
+    if updated:
+        return {"message": "Task name updated successfully"}
+    return JSONResponse(status_code=404, content={"message": "Task not found"})
+
 # Получение всех задач
 @app.get("/tasks", tags=["Задачи 📝"], summary="Получить все задачи")
 async def get_tasks() -> list[Task]:
@@ -124,22 +132,23 @@ async def delete_task(task_id: int) -> JSONResponse:
     if deleted:
         return {"message": "Task deleted successfully"}
     return JSONResponse(status_code=404, content={"message": "Task not found"})
-    
+
+# Поиск задач по названию
+@app.get("/tasks/search", tags=["Задачи 📝"], summary="Поиск задач по названию")
+async def search_tasks(query: str) -> list[Task]:
+    print(f"Поиск задач с запросом: {query}")  # Логируем запрос
+    tasks = await TaskRepository.search_tasks(query)  # Используем метод поиска
+    return tasks
+
 # Получение задач по пользователю
 @app.get("/tasks/{user_id}", tags=["Задачи 📝"], summary="Получить задачи по пользователю")
 async def get_tasks_by_user_id(user_id: int) -> list[Task]:
     tasks = await TaskRepository.get_tasks_by_user_id(user_id)
     return tasks
 
-@app.get("/tasks/{task_id}/responsibles", tags=["Задачи 📝"], summary="Получить исполнителей по ID задачи")
-async def get_responsibles_by_task_id(task_id: int) -> JSONResponse:
-    responsibles = await TaskRepository.get_responsibles_by_task_id(task_id)
-    if responsibles:
-        return JSONResponse(content={"responsibles": responsibles})
-    return JSONResponse(status_code=404, content={"message": "No responsibles found for this task"})
 
 # Запись ответственного за задачу
-@app.post("/tasks/responsibles", tags=["Задачи 📝"], summary="Добавить ответственного за задачу")
+@app.post("/tasks/responsibles", tags=["Ответственные 👤"], summary="Добавить ответственного за задачу")
 async def assign_responsible(responsible: Annotated[ResponsibleAdd, Depends()]) -> JSONResponse:
     try:
         success = await TaskRepository.add_responsible(responsible)
@@ -150,8 +159,16 @@ async def assign_responsible(responsible: Annotated[ResponsibleAdd, Depends()]) 
         print(f"Ошибка при добавлении исполнителя: {e}")  # Логируем ошибку
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
     
+# Получение исполнителей по ID задачи
+@app.get("/tasks/{task_id}/responsibles", tags=["Ответственные 👤"], summary="Получить исполнителей по ID задачи")
+async def get_responsibles_by_task_id(task_id: int) -> JSONResponse:
+    responsibles = await TaskRepository.get_responsibles_by_task_id(task_id)
+    if responsibles:
+        return JSONResponse(content={"responsibles": responsibles})
+    return JSONResponse(status_code=404, content={"message": "No responsibles found for this task"})
+    
 # Удаление ответственного за задачу
-@app.delete("/tasks/responsibles/{task_id}/{user_id}", tags=["Задачи 📝"], summary="Удалить ответственного за задачу")
+@app.delete("/tasks/responsibles/{task_id}/{user_id}", tags=["Ответственные 👤"], summary="Удалить ответственного за задачу")
 async def remove_responsible(task_id: int, user_id: int) -> JSONResponse:
     print(f"Удаление исполнителя: task_id={task_id}, user_id={user_id}")
     try:
@@ -163,33 +180,27 @@ async def remove_responsible(task_id: int, user_id: int) -> JSONResponse:
         print(f"Ошибка при удалении исполнителя: {e}")  # Логируем ошибку
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
-# Обновление названия задачи
-@app.put("/tasks/{task_id}/name", tags=["Задачи 📝"], summary="Обновить название задачи")
-async def update_task_name(task_id: int, new_name: str) -> JSONResponse:
-    updated = await TaskRepository.update_task_name(task_id, new_name)
-    if updated:
-        return {"message": "Task name updated successfully"}
-    return JSONResponse(status_code=404, content={"message": "Task not found"})
 
 # Запись новой подзадачи
-@app.post("/subtasks/{task_id}", tags=["Задачи 📝"], summary="Добавить новую подзадачу")
+@app.post("/subtasks/{task_id}", tags=["Подзадачи 📝"], summary="Добавить новую подзадачу")
 async def add_subtask(task_id: int, subtask: Annotated[SubtaskAdd, Depends()]) -> JSONResponse:
     subtask_id = await SubtaskRepository.add_subtask(task_id, subtask)
     return {"Subtask added": True, "subtask_id": subtask_id}
 
 # Получение подзадач по задаче
-@app.get("/subtasks/{task_id}", tags=["Задачи 📝"], summary="Получить подзадачи по задаче")
+@app.get("/subtasks/{task_id}", tags=["Подзадачи 📝"], summary="Получить подзадачи по задаче")
 async def get_subtasks_by_task_id(task_id: int) -> list[Subtask]:
     subtasks = await SubtaskRepository.get_subtasks(task_id)
     return subtasks
 
 # Обновление статуса подзадачи
-@app.put("/subtasks/{subtask_id}/status", tags=["Задачи 📝"], summary="Обновить статус подзадачи")
+@app.put("/subtasks/{subtask_id}/status", tags=["Подзадачи 📝"], summary="Обновить статус подзадачи")
 async def update_subtask_status(subtask_id: int, new_status: str) -> JSONResponse:
     updated = await SubtaskRepository.update_subtask_status(subtask_id, new_status)
     if updated:
         return {"message": "Subtask status updated successfully"}
     return JSONResponse(status_code=404, content={"message": "Subtask not found"})
+
 
 # Добавление нового файла
 @app.post("/files", tags=["Файлы 📁"], summary="Загрузить файл")

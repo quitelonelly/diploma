@@ -10,7 +10,7 @@ from frontend.requests import (
     request_add_subtask, request_get_my_tasks, request_get_user_role, request_add_task, request_confirm_name_task, 
     request_get_tasks, request_get_subtasks, request_add_responsible, request_delete_responsible, request_get_users, 
     request_update_subtask_status, request_delete_task, request_add_file, request_get_files_by_task_id, request_get_file,
-    request_delete_file
+    request_delete_file, request_get_responsible_by_task
     )
 
 from database.core import (
@@ -124,13 +124,22 @@ async def main_screen(page, login, password, token):
         # Ожидаем результат от request_get_users
         users = await request_get_users()  # Получаем пользователей через API
 
+        # Получаем связанных пользователей через API
+        associated_users_response = await request_get_responsible_by_task(task_id)
+        associated_users = []
+        if associated_users_response.status_code == 200:
+            data = associated_users_response.json()  # Получаем данные в формате JSON
+            associated_users = data.get("responsibles", [])  # Извлекаем список исполнителей
+        else:
+            print(f"Ошибка при получении связанных пользователей: {associated_users_response.status_code}, {associated_users_response.text}")
+
         add_person_dialog = create_add_person_dialog(
             users,  # Передаем пользователей в диалог
             close_icon, 
             page, 
             request_add_responsible, 
             task_id, 
-            get_associated_users, 
+            associated_users,  # Передаем связанных пользователей
             request_delete_responsible
         )
         
@@ -156,18 +165,28 @@ async def main_screen(page, login, password, token):
         page.update()
     
     # Функция показывает диалоговое окно с исполнителями задачи    
-    def show_responsible_users_dialog(task_id, e):
+    async def show_responsible_users_dialog(task_id, e):
         def close_dialog(dialog):
             dialog.open = False
             page.update()
-            
+
         close_icon = ft.IconButton(
             icon=ft.icons.CLOSE,
             icon_color=ft.colors.WHITE,
             on_click=lambda _: close_dialog(responsible_users_dialog)
         )
 
-        responsible_users_dialog = create_responsible_person_dialog(get_responsible_users, task_id, get_users, close_icon)
+        # Ожидаем результат от request_get_responsible_by_task
+        response = await request_get_responsible_by_task(task_id)
+        
+        if response.status_code == 200:
+            data = response.json()  # Получаем данные в формате JSON
+            responsible_users = data.get("responsibles", [])  # Извлекаем список исполнителей
+        else:
+            print(f"Ошибка при получении исполнителей: {response.status_code}, {response.text}")
+            responsible_users = []  # Если ошибка, устанавливаем пустой список
+
+        responsible_users_dialog = create_responsible_person_dialog(responsible_users, close_icon)
         page.dialog = responsible_users_dialog
         responsible_users_dialog.open = True
         page.update()
@@ -831,13 +850,13 @@ async def main_screen(page, login, password, token):
         # Обновляем main_container в зависимости от текущей выбранной панели
         if main_container.content == panel_my_tasks:
             my_task_list.controls.clear()
-            load_my_tasks(filtered_tasks)  # Передайте отфильтрованные задачи в функцию загрузки моих задач
+            asyncio.run(load_my_tasks(filtered_tasks)) # Передайте отфильтрованные задачи в функцию загрузки моих задач
         elif main_container.content == panel_all_tasks:
             all_task_list.controls.clear()
-            load_tasks(filtered_tasks)  # Передайте отфильтрованные задачи в функцию загрузки всех задач
+            asyncio.run(load_tasks(filtered_tasks))  # Передайте отфильтрованные задачи в функцию загрузки всех задач
         elif main_container.content == panel_done:
             completed_task_list.controls.clear()
-            load_comp_tasks(filtered_tasks)  # Передайте отфильтрованные задачи в функцию загрузки выполненных задач
+            asyncio.run(load_comp_tasks(filtered_tasks)) # Передайте отфильтрованные задачи в функцию загрузки выполненных задач
 
         
     # Создание кнопок навигации и инпута поиска
