@@ -173,3 +173,11 @@ async def request_seacrh_task(query: str):
         response = await client.get(f"http://localhost:8000/tasks/search?query={query}")
 
         return response
+    
+async def request_update_comment(task_id: int, comment: str):
+    async with httpx.AsyncClient() as client:
+        response = await client.put(
+            f"http://localhost:8000/tasks/{task_id}/comment",
+            json={"comment": comment}
+        )
+        return response

@@ -448,8 +448,8 @@ def create_progress_bar():
 
     return progress_bar
 
-def create_my_task_container(task_id, task_name, open_task, show_responsible_users_dialog, add_file,
-                             get_files, progress_bar):
+def create_my_task_container(task_id, task_name, comment, open_task, show_responsible_users_dialog, add_file,
+                             get_files, progress_bar, update_comment):
     
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=True, border_width=0, width=None, max_lines=2, expand=True)
     
@@ -458,6 +458,29 @@ def create_my_task_container(task_id, task_name, open_task, show_responsible_use
     in_all_task_list_completed = ft.ListView(spacing=10, expand=True, padding=ft.padding.only(top=10, left=10))
 
     file_container = create_file_container(task_id, get_files)
+
+    comment_process = ft.TextField(
+        hint_text="Комментарий",
+        value=comment,
+        read_only=False,
+        multiline=True,
+        min_lines=2,
+        max_lines=4,
+        border_color=ft.colors.GREY_300,
+        color=ft.colors.BLACK,
+        on_change=lambda e: asyncio.run(update_comment(task_id, e.control.value))
+        )
+
+    deadline_input = ft.TextField(
+        label="Срок выполнения",
+        hint_text="Введите срок выполнения",
+        border_color=ft.colors.GREY_300,
+        color=ft.colors.BLACK,
+        max_lines=1,
+        width=None,
+        expand=True
+    )
+    
     # Создаем кнопку загрузки файла
     btn_upload_file = ft.TextButton(
         content=ft.Row(
@@ -606,6 +629,8 @@ def create_my_task_container(task_id, task_name, open_task, show_responsible_use
                     padding=ft.padding.all(10),
                     height=0,  # начальная высота контейнера
                 ),
+                comment_process,
+                deadline_input
             ],
         ),
         bgcolor="#f7f7f7",
@@ -619,14 +644,16 @@ def create_my_task_container(task_id, task_name, open_task, show_responsible_use
     my_task_container.in_all_task_list_completed = in_all_task_list_completed
     my_task_container.progress_bar = progress_bar
     my_task_container.title_task = title_task
+    my_task_container.comment_process = comment_process
 
     my_task_container.is_open = False  # добавляем атрибут is_open
     
     return my_task_container
 
-def create_task_container(task_id, task_name, confirm_name_task, open_task, add_people, 
+def create_task_container(task_id, task_name, comment, confirm_name_task, open_task, add_people, 
                           all_task_list, page, show_confirm_delete_task_dialog, add_subtask, 
-                          is_admin, show_responsible_users_dialog, add_file, get_files, progress_bar):
+                          is_admin, show_responsible_users_dialog, add_file, get_files, progress_bar,
+                          update_comment):
 
     title_task = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=False, border_width=0, width=None, max_lines=2, expand=True)
     title_task_user = ft.TextField(value=task_name, text_size=22, color=ft.colors.BLACK, read_only=True, border_width=0, width=None, max_lines=2, expand=True)
@@ -637,6 +664,28 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
 
     # Создаем контейнер файла
     file_container = create_file_container(task_id, get_files)
+
+    comment_process = ft.TextField(
+        hint_text="Комментарий",
+        value=comment,
+        read_only=False,
+        multiline=True,
+        min_lines=2,
+        max_lines=4,
+        border_color=ft.colors.GREY_300,
+        color=ft.colors.BLACK,
+        on_change=lambda e: asyncio.run(update_comment(task_id, e.control.value))
+        )
+
+    deadline_input = ft.TextField(
+        label="Срок выполнения",
+        hint_text="Введите срок выполнения",
+        border_color=ft.colors.GREY_300,
+        color=ft.colors.BLACK,
+        max_lines=1,
+        width=None,
+        expand=True
+    )
     
     # Добавляем кнопку добавления подзадачи только для администраторов
     btn_add_subtask = ft.TextButton(
@@ -820,6 +869,8 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                         padding=ft.padding.all(10),
                         height=0,  # начальная высота контейнера
                     ),
+                    comment_process,
+                    deadline_input
                 ],
             ),
             bgcolor="#f7f7f7",
@@ -872,6 +923,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
                         padding=ft.padding.all(10),
                         height=0,  # начальная высота контейнера
                     ),
+                    comment_process
                 ],
             ),
             bgcolor="#f7f7f7",
@@ -884,6 +936,7 @@ def create_task_container(task_id, task_name, confirm_name_task, open_task, add_
     all_task_container.in_all_task_list_completed = in_all_task_list_completed
     all_task_container.progress_bar = progress_bar
     all_task_container.title_task = title_task
+    all_task_container.comment_process = comment_process
     
     all_task_container.task_id = task_id
     all_task_container.is_open = False  # добавляем атрибут is_open

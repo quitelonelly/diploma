@@ -264,6 +264,24 @@ class TaskRepository:
             task_dicts = [task_models_to_dict(task_model) for task_model in task_models]
             return task_dicts  # Возвращаем список задач
         
+    # В TaskRepository добавим методы для работы с комментариями
+    @classmethod
+    async def update_task_comment(cls, task_id: int, comment: str) -> bool:
+        async with new_session() as session:
+            task = await session.get(TaskORM, task_id)
+            if not task:
+                return False
+                
+            task.comment = comment
+            await session.commit()
+            return True
+
+    @classmethod
+    async def get_task_comment(cls, task_id: int) -> str:
+        async with new_session() as session:
+            task = await session.get(TaskORM, task_id)
+            return task.comment if task else None
+        
             
 class SubtaskRepository:
 
@@ -321,6 +339,7 @@ def task_models_to_dict(task_model: TaskORM) -> dict:
         'id': task_model.id,
         'taskname': task_model.taskname,
         'status': task_model.status,
+        'comment': task_model.comment  
     }
 
 def subtask_models_to_dict(subtask_model: SubtaskORM) -> dict:

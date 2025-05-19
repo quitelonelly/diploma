@@ -19,6 +19,7 @@ tasks_table = Table(
     Column("id", BigInteger, primary_key=True),
     Column("taskname", String),
     Column("status", String),
+    Column("comment", String)
 )
 
 # Таблица с файлами

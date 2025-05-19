@@ -42,10 +42,12 @@ class TaskORM(Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     taskname: Mapped[str]
     status: Mapped[str] = mapped_column(default="Выполняется")
+    comment: Mapped[str | None]
 
     
 class Task(TaskAdd):
     status: str
+    comment: str | None
     id: int
 
 

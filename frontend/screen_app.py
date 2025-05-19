@@ -8,7 +8,7 @@ from threading import Timer
 
 from frontend.requests import (
     request_add_subtask, request_get_my_tasks, request_get_user_role, request_add_task, request_confirm_name_task, 
-    request_get_tasks, request_get_subtasks, request_add_responsible, request_delete_responsible, request_get_users, 
+    request_get_tasks, request_get_subtasks, request_add_responsible, request_delete_responsible, request_get_users, request_update_comment, 
     request_update_subtask_status, request_delete_task, request_add_file, request_get_files_by_task_id, request_get_file,
     request_delete_file, request_get_responsible_by_task
     )
@@ -304,16 +304,27 @@ async def main_screen(page, login, password, token):
             task_id = response.json().get("task_id")  # Получаем ID новой задачи из ответа
             print(f"Задача успешно добавлена с ID: {task_id}")
             
-            # Здесь вы можете обновить интерфейс, чтобы отобразить новую задачу
             # Например, добавьте задачу в список задач
             progress_bar = create_progress_bar()  # Создаем прогресс-бар для новой задачи
-            task_container = create_task_container(task_id, title_task, confirm_name_task, open_task, 
+            task_container = create_task_container(task_id, title_task, '', confirm_name_task, open_task, 
                                                 add_people, all_task_list, page, show_confirm_delete_task_dialog, add_subtask,
-                                                admin_role, show_responsible_users_dialog, add_file, get_files, progress_bar)
+                                                admin_role, show_responsible_users_dialog, add_file, get_files, progress_bar,
+                                                update_comment)
             all_task_list.controls.append(task_container)
             page.update()    
         else:
             print(f"Ошибка при добавлении задачи: {response.status_code}, {response.text}")
+
+    # Добавим функцию для обновления комментария
+    async def update_comment(task_id, comment_text):
+        try:
+            response = await request_update_comment(task_id, comment_text)
+            if response.status_code == 200:
+                print("Комментарий успешно обновлен!")
+            else:
+                print(f"Ошибка при обновлении комментария: {response.status_code}, {response.text}")
+        except Exception as e:
+            print(f"Ошибка при обновлении комментария: {e}")
 
     # Функция для создания контейнера подзадачи
     def create_subtask_container(subtask_id, task_id, subtask_name, process_list, test_list, completed_list, progress_bar):
@@ -442,11 +453,13 @@ async def main_screen(page, login, password, token):
                     task_container = create_my_task_container(
                         task['id'], 
                         task['taskname'],  
+                        task['comment'],
                         open_task, 
                         show_responsible_users_dialog, 
                         add_file, 
                         get_files,
-                        progress_bar
+                        progress_bar,
+                        update_comment
                     )
 
                     # Получаем подзадачи для текущей задачи через API
@@ -533,10 +546,10 @@ async def main_screen(page, login, password, token):
                 progress_bar = create_progress_bar()    
                 
                 task_container = create_task_container(
-                    task['id'], task['taskname'], confirm_name_task, open_task,
+                    task['id'], task['taskname'], task['comment'], confirm_name_task, open_task,
                     add_people, all_task_list, page, show_confirm_delete_task_dialog,
                     add_subtask, admin_role, show_responsible_users_dialog,
-                    add_file, get_files, progress_bar
+                    add_file, get_files, progress_bar, update_comment
                 )
 
                 # Получаем подзадачи для текущей задачи через API

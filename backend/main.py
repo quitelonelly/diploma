@@ -254,3 +254,7 @@ async def delete_file(file_id: int) -> JSONResponse:
     return JSONResponse(status_code=404, content={"message": "File not found"})
 
 
+@app.put("/tasks/{task_id}/comment", response_model=bool)
+async def update_task_comment(task_id: int, comment_data: dict):
+    return await TaskRepository.update_task_comment(task_id, comment_data.get("comment", ""))
+
